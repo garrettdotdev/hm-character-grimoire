@@ -4,9 +4,10 @@ interface SpellCardProps {
   spell: Spell
   size?: 'small' | 'medium' | 'large'
   onRemove?: () => void
+  onClick?: () => void
 }
 
-export function SpellCard({ spell, size = 'medium', onRemove }: SpellCardProps) {
+export function SpellCard({ spell, size = 'medium', onRemove, onClick }: SpellCardProps) {
   const sizeClasses = {
     small: 'w-48 h-32',
     medium: 'w-64 h-40',
@@ -37,7 +38,7 @@ export function SpellCard({ spell, size = 'medium', onRemove }: SpellCardProps) 
   const textClasses = textSizeClasses[size]
 
   return (
-    <div className={`${sizeClasses[size]} bg-gray-800 border border-gray-700 rounded-lg p-3 hover:border-gray-600 transition-colors relative group flex flex-col`}>
+    <div className={`${sizeClasses[size]} bg-gray-800 border border-gray-700 rounded-lg p-3 hover:border-gray-600 transition-colors relative group flex flex-col`} onClick={onClick}>
       {/* Remove button */}
       {onRemove && (
         <button

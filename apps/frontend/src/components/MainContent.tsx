@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import {type Character, type Spell, SpellConvocation} from '../types'
 import { SpellCard } from './SpellCard'
+import { SpellDetailsModal } from "./SpellDetailsModal.tsx"
 
 interface MainContentProps {
   selectedCharacter: Character | null
@@ -22,6 +23,7 @@ export function MainContent({
   const [selectedComplexity, setSelectedComplexity] = useState<string>('all')
   const [loading, setLoading] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
+  const [selectedSpell, setSelectedSpell] = useState<Spell | null>(null)
 
   const convocations = Object.values(SpellConvocation)
 
@@ -184,9 +186,18 @@ export function MainContent({
                 spell={spell}
                 size="medium"
                 onRemove={() => handleRemoveSpell(spell.id)}
+                onClick={() => setSelectedSpell(spell)}
               />
             ))}
           </div>
+        )}
+
+        {/* Spell Details Modal */}
+        {selectedSpell && (
+          <SpellDetailsModal
+            spell={selectedSpell}
+            onClose={() => setSelectedSpell(null)}
+          />
         )}
 
         {/* Drop zone indicator */}
