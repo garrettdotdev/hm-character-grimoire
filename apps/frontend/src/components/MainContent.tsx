@@ -75,6 +75,7 @@ export function MainContent({
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
+    e.stopPropagation()
     e.dataTransfer.dropEffect = 'copy'
     setIsDragOver(true)
   }
@@ -86,12 +87,14 @@ export function MainContent({
 
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault()
+    e.stopPropagation()
     setIsDragOver(false)
 
     if (!selectedCharacter || !onAddSpellToCharacter) return
 
     try {
       const spellData = JSON.parse(e.dataTransfer.getData('application/json'))
+      console.log('Dropping spell on character:', spellData.name, 'to', selectedCharacter.name)
       await onAddSpellToCharacter(spellData.id)
     } catch (error) {
       console.error('Failed to add spell to character:', error)

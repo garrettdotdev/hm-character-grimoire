@@ -228,6 +228,37 @@ function App() {
     }
   }
 
+  const handleUpdateSpell = async (updatedSpell: Spell) => {
+    try {
+      const response = await fetch(`/api/spells/${updatedSpell.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedSpell),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update spell')
+      }
+
+      const result = await response.json()
+      setSpells(prev => prev.map(spell =>
+        spell.id === result.id ? result : spell
+      ))
+
+      if (selectedSpell?.id === result.id) {
+        setSelectedSpell(result)
+      }
+    } catch (error) {
+      console.error('Failed to update spell:', error)
+      setNotification({
+        message: 'Failed to update spell',
+        type: 'error'
+      })
+    }
+  }
+
   const handleAddSpellToCharacter = async (spellId: string) => {
     if (!selectedCharacter) return
 
@@ -325,6 +356,7 @@ function App() {
         onAddSpellToCharacter={(spell) => handleAddSpellToCharacter(spell.id)}
         hasSelectedCharacter={!!selectedCharacter}
         loading={spellsLoading}
+        onUpdateSpell={handleUpdateSpell}
       />
 
       {/* Add Character Modal */}
@@ -388,6 +420,7 @@ function App() {
           onCancel={() => setShowAddSpellModal(false)}
           loading={spellFormLoading}
           mode="create"
+          allSpells={spells}
         />
       </Modal>
 
@@ -409,9 +442,13 @@ function App() {
             bonusEffects: selectedSpell.bonusEffects,
             castingTime: selectedSpell.castingTime,
             range: selectedSpell.range,
-            duration: selectedSpell.duration
+            duration: selectedSpell.duration,
+            folderPath: selectedSpell.folderPath,
+            sourceBook: selectedSpell.sourceBook,
+            sourcePage: selectedSpell.sourcePage
           } : undefined}
           mode="edit"
+          allSpells={spells}
         />
       </Modal>
 

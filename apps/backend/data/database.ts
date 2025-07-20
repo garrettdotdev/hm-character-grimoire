@@ -22,7 +22,10 @@ export class Database {
                     bonus_effects TEXT NOT NULL,
                     casting_time TEXT NOT NULL,
                     range TEXT NOT NULL,
-                    duration TEXT NOT NULL
+                    duration TEXT NOT NULL,
+                    folder_path TEXT NOT NULL DEFAULT '/',
+                    source_book TEXT NOT NULL DEFAULT '',
+                    source_page INTEGER NOT NULL DEFAULT 0
                 )
             `);
 
@@ -43,6 +46,13 @@ export class Database {
                     PRIMARY KEY (character_id, spell_id),
                     FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE,
                     FOREIGN KEY (spell_id) REFERENCES spells(id) ON DELETE CASCADE
+                )
+            `);
+
+            this.db.run(`
+                CREATE TABLE IF NOT EXISTS folders (
+                    folder_path TEXT PRIMARY KEY,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             `);
         });
@@ -70,8 +80,8 @@ export class Database {
     addSpell(spell: Spell): Promise<void> {
         return new Promise((resolve, reject) => {
             const stmt = this.db.prepare(`
-                INSERT INTO spells (id, name, convocation, complexity_level, description, bonus_effects, casting_time, range, duration)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO spells (id, name, convocation, complexity_level, description, bonus_effects, casting_time, range, duration, folder_path, source_book, source_page)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `);
             stmt.run([
                 spell.id,
@@ -82,7 +92,10 @@ export class Database {
                 JSON.stringify(spell.bonusEffects),
                 spell.castingTime,
                 spell.range,
-                spell.duration
+                spell.duration,
+                spell.folderPath || '/',
+                spell.sourceBook || '',
+                spell.sourcePage || 0
             ], (err) => {
                 if (err) reject(err);
                 else resolve();
@@ -96,7 +109,8 @@ export class Database {
             const stmt = this.db.prepare(`
                 UPDATE spells
                 SET name = ?, convocation = ?, complexity_level = ?, description = ?,
-                    bonus_effects = ?, casting_time = ?, range = ?, duration = ?
+                    bonus_effects = ?, casting_time = ?, range = ?, duration = ?, folder_path = ?,
+                    source_book = ?, source_page = ?
                 WHERE id = ?
             `);
             stmt.run([
@@ -108,6 +122,9 @@ export class Database {
                 spell.castingTime,
                 spell.range,
                 spell.duration,
+                spell.folderPath || '/',
+                spell.sourceBook || '',
+                spell.sourcePage || 0,
                 spell.id
             ], (err) => {
                 if (err) reject(err);
@@ -159,6 +176,90 @@ export class Database {
                 else resolve();
             });
             stmt.finalize();
+        });
+    }
+
+    getAllFolders(): Promise<string[]> {
+        return new Promise((resolve, reject) => {
+            // Get folders from both the folders table and spell folder paths
+            this.db.all(`
+                SELECT DISTINCT folder_path FROM (
+                    SELECT folder_path FROM folders
+                    UNION
+                    SELECT DISTINCT folder_path FROM spells WHERE folder_path != '/'
+                ) ORDER BY folder_path
+            `, (err, rows: any[]) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rows.map(row => row.folder_path));
+                }
+            });
+        });
+    }
+
+    createFolder(folderPath: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const stmt = this.db.prepare('INSERT OR IGNORE INTO folders (folder_path) VALUES (?)');
+            stmt.run([folderPath], (err) => {
+                if (err) reject(err);
+                else resolve();
+            });
+            stmt.finalize();
+        });
+    }
+
+    renameFolder(oldPath: string, newPath: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.db.serialize(() => {
+                // Update folder paths in spells
+                this.db.run('UPDATE spells SET folder_path = ? WHERE folder_path = ?', [newPath, oldPath], (err) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+
+                    // Update folder paths in folders table
+                    this.db.run('UPDATE folders SET folder_path = ? WHERE folder_path = ?', [newPath, oldPath], (updateErr) => {
+                        if (updateErr) {
+                            reject(updateErr);
+                            return;
+                        }
+                        resolve();
+                    });
+                });
+            });
+        });
+    }
+
+    deleteFolder(folderPath: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.db.serialize(() => {
+                // Move all spells in this folder to parent folder
+                const parentPath = folderPath.lastIndexOf('/') > 0
+                    ? folderPath.substring(0, folderPath.lastIndexOf('/'))
+                    : '/';
+
+                this.db.run(
+                    'UPDATE spells SET folder_path = ? WHERE folder_path = ?',
+                    [parentPath, folderPath],
+                    (err) => {
+                        if (err) {
+                            reject(err);
+                            return;
+                        }
+
+                        // Delete the folder record
+                        this.db.run('DELETE FROM folders WHERE folder_path = ?', [folderPath], (deleteErr) => {
+                            if (deleteErr) {
+                                reject(deleteErr);
+                                return;
+                            }
+                            resolve();
+                        });
+                    }
+                );
+            });
         });
     }
 
@@ -297,7 +398,10 @@ export class Database {
             bonusEffects: JSON.parse(row.bonus_effects) as BonusEffect[],
             castingTime: row.casting_time,
             range: row.range,
-            duration: row.duration
+            duration: row.duration,
+            folderPath: row.folder_path || '/',
+            sourceBook: row.source_book || '',
+            sourcePage: row.source_page || 0
         };
     }
 

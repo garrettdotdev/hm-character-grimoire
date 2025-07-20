@@ -23,6 +23,7 @@ export interface Spell {
     castingTime: string;
     range: string;
     duration: string;
+    folderPath: string; // Linux-style path, "/" for root
     sourceBook: string;
     sourcePage: number;
 }

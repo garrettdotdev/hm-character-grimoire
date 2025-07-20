@@ -42,6 +42,9 @@ export interface Spell {
   castingTime: string
   range: string
   duration: string
+  folderPath: string
+  sourceBook: string
+  sourcePage: number
 }
 
 

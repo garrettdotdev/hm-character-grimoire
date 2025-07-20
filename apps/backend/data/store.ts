@@ -32,6 +32,23 @@ export class DataStore {
         return await database.removeSpellFromCharacter(characterId, spellId);
     }
 
+    // Folder methods
+    async getAllFolders(): Promise<string[]> {
+        return await database.getAllFolders();
+    }
+
+    async createFolder(folderPath: string): Promise<void> {
+        return await database.createFolder(folderPath);
+    }
+
+    async renameFolder(oldPath: string, newPath: string): Promise<void> {
+        return await database.renameFolder(oldPath, newPath);
+    }
+
+    async deleteFolder(folderPath: string): Promise<void> {
+        return await database.deleteFolder(folderPath);
+    }
+
     // Character methods
     async getAllCharacters(): Promise<Character[]> {
         return await database.getAllCharacters();

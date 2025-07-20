@@ -1,4 +1,7 @@
+import {useState, useMemo, useEffect} from 'react'
 import type { Spell } from '../types'
+import { FolderTreeNode } from './FolderTreeNode'
+import { buildFolderTree, type FolderTreeState } from '../utils/folderTree'
 
 interface SpellSidebarProps {
   spells: Spell[]
@@ -11,19 +14,141 @@ interface SpellSidebarProps {
   onAddSpellToCharacter?: (spell: Spell) => void
   hasSelectedCharacter: boolean
   loading: boolean
+  onUpdateSpell?: (spell: Spell) => void // For moving spells between folders
 }
 
 export function SpellSidebar({
   spells,
   selectedSpell,
   onSpellSelect,
+  onSpellsChange,
   onAddSpell,
   onEditSpell,
   onDeleteSpell,
   onAddSpellToCharacter,
   hasSelectedCharacter,
-  loading
+  loading,
+  onUpdateSpell
 }: SpellSidebarProps) {
+
+  const [expandedFolders, setExpandedFolders] = useState<FolderTreeState>({
+    '/': true // Root is always expanded
+  })
+  const [emptyFolders, setEmptyFolders] = useState<string[]>([])
+
+  // Fetch empty folders
+  useEffect(() => {
+    const fetchFolders = async () => {
+      try {
+        const response = await fetch('/api/folders')
+        const data = await response.json()
+        setEmptyFolders(data.folders || [])
+      } catch (error) {
+        console.error('Failed to fetch folders:', error)
+      }
+    }
+
+    fetchFolders()
+  }, [spells]) // Refetch when spells change
+
+  // Build the folder tree from spells and empty folders
+  const folderTree = useMemo(() => {
+    return buildFolderTree(spells, expandedFolders, emptyFolders)
+  }, [spells, expandedFolders, emptyFolders])
+
+  const handleToggleFolder = (path: string) => {
+    setExpandedFolders(prev => ({
+      ...prev,
+      [path]: !prev[path]
+    }))
+  }
+
+  const handleMoveSpell = async (spellId: string, newFolderPath: string) => {
+    const spell = spells.find(s => s.id === spellId)
+    if (!spell || !onUpdateSpell) return
+
+    const updatedSpell = { ...spell, folderPath: newFolderPath }
+    onUpdateSpell(updatedSpell)
+  }
+
+  const handleCreateFolder = async (parentPath: string, folderName: string) => {
+    try {
+      const newFolderPath = parentPath === '/' ? `/${folderName}` : `${parentPath}/${folderName}`
+
+      const response = await fetch('/api/folders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ folderPath: newFolderPath }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create folder')
+      }
+
+      // Expand the parent folder and the new folder
+      setExpandedFolders(prev => ({
+        ...prev,
+        [parentPath]: true,
+        [newFolderPath]: true
+      }))
+
+      // Refresh the spell list to pick up the new folder
+      onSpellsChange()
+    } catch (error) {
+      console.error('Failed to create folder:', error)
+    }
+  }
+
+  const handleRenameFolder = async (oldPath: string, newName: string) => {
+    // This would require updating all spells in this folder and subfolders
+    // For now, we'll implement this as a batch update
+    console.log('Rename folder:', oldPath, 'to', newName)
+    try {
+      const newPath = oldPath.replace(/\/[^/]*$/, `/${newName}`)
+
+      const response = await fetch('/api/folders', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ oldPath, newPath }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to rename folder')
+      }
+
+      // Refresh the spell list to pick up the new folder
+      onSpellsChange()
+    } catch (error) {
+      console.error('Failed to rename folder:', error)
+    }
+  }
+
+  const handleDeleteFolder = async (path: string) => {
+    // This would move all spells to the parent folder
+    console.log('Delete folder:', path)
+    try {
+    const response = await fetch('/api/folders', {
+    method: 'DELETE',
+    headers: {
+    'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ folderPath: path }),
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to delete folder')
+    }
+
+    // Refresh the spell list to pick up the new folder
+    onSpellsChange()
+    } catch (error) {
+        console.error('Failed to delete folder:', error)
+    }
+  }
 
   const handleDragStart = (e: React.DragEvent, spell: Spell) => {
     e.dataTransfer.setData('application/json', JSON.stringify(spell))
@@ -70,40 +195,19 @@ export function SpellSidebar({
             No spells found
           </div>
         ) : (
-          spells
-            .slice()
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map(spell => (
-            <div
-              key={spell.id}
-              className={`p-3 border-b border-gray-700 cursor-pointer transition-colors hover:bg-gray-700 relative group ${
-                selectedSpell?.id === spell.id
-                  ? 'bg-gray-700 border-r-4 border-r-blue-500'
-                  : ''
-              }`}
-              draggable={hasSelectedCharacter}
-              onDragStart={(e) => handleDragStart(e, spell)}
-              onClick={() => onSpellSelect(spell)}
-            >
-              <div className="font-medium pr-8">{spell.name}</div>
-              <div className="text-sm text-gray-400">{spell.convocation} • Level {spell.complexityLevel}</div>
-              <div className="text-xs text-gray-500 mt-1 line-clamp-2">{spell.description}</div>
-
-              {/* Add to character button */}
-              {hasSelectedCharacter && onAddSpellToCharacter && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onAddSpellToCharacter(spell)
-                  }}
-                  className="absolute top-2 right-2 w-6 h-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                  title="Add spell to character"
-                >
-                  +
-                </button>
-              )}
-            </div>
-          ))
+          <FolderTreeNode
+            node={folderTree}
+            selectedSpell={selectedSpell}
+            onSpellSelect={onSpellSelect}
+            onToggleFolder={handleToggleFolder}
+            onAddSpellToCharacter={onAddSpellToCharacter}
+            hasSelectedCharacter={hasSelectedCharacter}
+            level={0}
+            onCreateFolder={handleCreateFolder}
+            onRenameFolder={handleRenameFolder}
+            onDeleteFolder={handleDeleteFolder}
+            onMoveSpell={handleMoveSpell}
+          />
         )}
       </div>
     </div>

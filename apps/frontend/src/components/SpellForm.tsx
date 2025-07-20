@@ -1,29 +1,23 @@
 import { useState, useEffect } from 'react'
 import {type BonusEffect, type Spell, SpellConvocation} from '../types'
+import { FolderPicker } from './FolderPicker'
 
 interface SpellFormProps {
-  onSave: (spell: {
-      name: string;
-      convocation: "Lyahvi" | "Peleahn" | "Jmorvi" | "Fyvria" | "Odivshe" | "Savorya" | "Neutral" | string;
-      complexityLevel: number;
-      description: string;
-      bonusEffects: BonusEffect[];
-      castingTime: string;
-      range: string;
-      duration: string
-  }) => Promise<void>
+  onSave: (spell: Omit<Spell, 'id'>) => Promise<void>
   onCancel: () => void
   loading?: boolean
   initialData?: Omit<Spell, 'id'>
   mode?: 'create' | 'edit'
+  allSpells?: Spell[] // For extracting existing folder paths
 }
 
-export function SpellForm({ 
-  onSave, 
-  onCancel, 
-  loading = false, 
+export function SpellForm({
+  onSave,
+  onCancel,
+  loading = false,
   initialData,
-  mode = 'create'
+  mode = 'create',
+  allSpells = []
 }: SpellFormProps) {
   const [formData, setFormData] = useState({
     name: initialData?.name || '',
@@ -33,7 +27,10 @@ export function SpellForm({
     bonusEffects: initialData?.bonusEffects || [],
     castingTime: initialData?.castingTime || '',
     range: initialData?.range || '',
-    duration: initialData?.duration || ''
+    duration: initialData?.duration || '',
+    folderPath: initialData?.folderPath || '/',
+    sourceBook: initialData?.sourceBook || '',
+    sourcePage: initialData?.sourcePage || 0
   })
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
 
@@ -48,10 +45,16 @@ export function SpellForm({
         bonusEffects: initialData.bonusEffects || [],
         castingTime: initialData.castingTime || '',
         range: initialData.range || '',
-        duration: initialData.duration || ''
+        duration: initialData.duration || '',
+        folderPath: initialData.folderPath || '/',
+        sourceBook: initialData.sourceBook || '',
+        sourcePage: initialData.sourcePage || 0
       })
     }
   }, [initialData])
+
+  // Extract existing folder paths from all spells
+  const existingFolders = allSpells.map(spell => spell.folderPath).filter(Boolean)
 
   const convocationOptions = Object.values(SpellConvocation)
 
@@ -181,6 +184,16 @@ export function SpellForm({
         {errors.description && (
           <p className="mt-1 text-sm text-red-400">{errors.description}</p>
         )}
+      </div>
+
+      {/* Folder Path field */}
+      <div>
+        <FolderPicker
+          value={formData.folderPath}
+          onChange={(folderPath) => handleChange('folderPath', folderPath)}
+          disabled={loading}
+          allFolders={existingFolders}
+        />
       </div>
 
       {/* Casting Time field (optional) */}

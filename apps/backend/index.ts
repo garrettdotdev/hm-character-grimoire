@@ -38,7 +38,7 @@ app.get('/api/spells/:id', async (req, res) => {
 
 app.post('/api/spells', async (req, res) => {
     try {
-        const { name, convocation, complexityLevel, description, bonusEffects, castingTime, range, duration } = req.body;
+        const { name, convocation, complexityLevel, description, bonusEffects, castingTime, range, duration, folderPath } = req.body;
 
         if (!name) {
             return res.status(400).json({ error: 'Spell name is required' });
@@ -62,7 +62,10 @@ app.post('/api/spells', async (req, res) => {
             bonusEffects: bonusEffects || [],
             castingTime: castingTime || '',
             range: range || '',
-            duration: duration || ''
+            duration: duration || '',
+            folderPath: folderPath || '/',
+            sourceBook: '',
+            sourcePage: 0
         };
 
         await dataStore.addSpell(spell);
@@ -74,7 +77,7 @@ app.post('/api/spells', async (req, res) => {
 
 app.put('/api/spells/:id', async (req, res) => {
     try {
-        const { name, convocation, complexityLevel, description, bonusEffects, castingTime, range, duration } = req.body;
+        const { name, convocation, complexityLevel, description, bonusEffects, castingTime, range, duration, folderPath } = req.body;
         const spellId = req.params.id;
 
         if (!name) {
@@ -105,7 +108,8 @@ app.put('/api/spells/:id', async (req, res) => {
             bonusEffects: bonusEffects || [],
             castingTime: castingTime || '',
             range: range || '',
-            duration: duration || ''
+            duration: duration || '',
+            folderPath: folderPath || '/'
         };
 
         await dataStore.updateSpell(updatedSpell);
@@ -129,6 +133,67 @@ app.delete('/api/spells/:id', async (req, res) => {
         res.status(204).send();
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete spell' });
+    }
+});
+
+// Folder management endpoints
+app.get('/api/folders', async (req, res) => {
+    try {
+        const folders = await dataStore.getAllFolders();
+        res.json({ folders });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch folders' });
+    }
+});
+
+app.post('/api/folders', async (req, res) => {
+    try {
+        const { folderPath } = req.body;
+
+        if (!folderPath || folderPath === '/') {
+            return res.status(400).json({ error: 'Valid folder path is required' });
+        }
+
+        await dataStore.createFolder(folderPath);
+        res.status(201).json({ folderPath });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to create folder' });
+    }
+});
+
+app.put('/api/folders', async (req, res) => {
+    try {
+        const { oldPath, newPath } = req.body;
+
+        if (!oldPath || !newPath) {
+            return res.status(400).json({ error: 'Old and new folder paths are required' });
+        }
+        if (oldPath === '/') {
+            return res.status(400).json({ error: 'Cannot rename root folder' });
+        }
+        if (oldPath === newPath) {
+            return res.status(400).json({ error: 'New folder path must be different from old path' });
+        }
+
+        await dataStore.renameFolder(oldPath, newPath);
+        res.json({ oldPath, newPath });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to rename folder' });
+    }
+});
+
+app.delete('/api/folders', async (req, res) => {
+    try {
+        const { folderPath } = req.body;
+
+        if (!folderPath || folderPath === '/') {
+            return res.status(400).json({ error: 'Cannot delete root folder' });
+        }
+
+        await dataStore.deleteFolder(folderPath);
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete folder' });
     }
 });
 
