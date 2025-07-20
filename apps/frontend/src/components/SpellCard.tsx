@@ -2,39 +2,87 @@ import type { Spell } from '../types'
 
 interface SpellCardProps {
   spell: Spell
+  size?: 'small' | 'medium' | 'large'
+  onRemove?: () => void
 }
 
-export function SpellCard({ spell }: SpellCardProps) {
+export function SpellCard({ spell, size = 'medium', onRemove }: SpellCardProps) {
+  const sizeClasses = {
+    small: 'w-48 h-32',
+    medium: 'w-64 h-40',
+    large: 'w-80 h-48'
+  }
+
+  const textSizeClasses = {
+    small: {
+      title: 'text-sm',
+      subtitle: 'text-xs',
+      description: 'text-xs',
+      details: 'text-xs'
+    },
+    medium: {
+      title: 'text-base',
+      subtitle: 'text-sm',
+      description: 'text-sm',
+      details: 'text-xs'
+    },
+    large: {
+      title: 'text-lg',
+      subtitle: 'text-base',
+      description: 'text-sm',
+      details: 'text-sm'
+    }
+  }
+
+  const textClasses = textSizeClasses[size]
+
   return (
-    <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 h-fit transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/30">
-      <div className="mb-3">
-        <h3 className="text-lg font-medium text-white mb-2">{spell.name}</h3>
-        <div className="flex gap-2 flex-wrap">
-          <span className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-medium">
-            {spell.convocation}
-          </span>
-          <span className="bg-gray-700 text-gray-300 border border-gray-600 px-2 py-1 rounded-full text-xs font-medium">
-            Level {spell.complexityLevel}
-          </span>
+    <div className={`${sizeClasses[size]} bg-gray-800 border border-gray-700 rounded-lg p-3 hover:border-gray-600 transition-colors relative group flex flex-col`}>
+      {/* Remove button */}
+      {onRemove && (
+        <button
+          onClick={onRemove}
+          className="absolute top-2 right-2 w-6 h-6 bg-red-600 hover:bg-red-700 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+          title="Remove spell from character"
+        >
+          ×
+        </button>
+      )}
+
+      {/* Header */}
+      <div className="mb-2">
+        <h3 className={`${textClasses.title} font-semibold text-white truncate pr-8`}>
+          {spell.name}
+        </h3>
+        <div className={`${textClasses.subtitle} text-gray-400`}>
+          {spell.convocation} • Level {spell.complexityLevel}
         </div>
       </div>
-      
-      <div className="flex flex-col gap-3">
-        <div className="text-gray-300 leading-relaxed line-clamp-3">
+
+      {/* Description */}
+      <div className="flex-1 overflow-hidden mb-2">
+        <p className={`${textClasses.description} text-gray-300 line-clamp-3`}>
           {spell.description}
-        </div>
-        
-        <div className="flex flex-col gap-1">
-          <div className="text-sm text-gray-400">
-            <span className="text-white font-medium">Casting Time:</span> {spell.castingTime}
+        </p>
+      </div>
+
+      {/* Footer details */}
+      <div className={`${textClasses.details} text-gray-500 space-y-1`}>
+        {spell.castingTime && (
+          <div className="truncate">
+            <span className="font-medium">Cast:</span> {spell.castingTime}
           </div>
-          <div className="text-sm text-gray-400">
-            <span className="text-white font-medium">Range:</span> {spell.range}
+        )}
+        {spell.range && (
+          <div className="truncate">
+            <span className="font-medium">Range:</span> {spell.range}
           </div>
-          <div className="text-sm text-gray-400">
-            <span className="text-white font-medium">Duration:</span> {spell.duration}
+        )}
+        {spell.duration && (
+          <div className="truncate">
+            <span className="font-medium">Duration:</span> {spell.duration}
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

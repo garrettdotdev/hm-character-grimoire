@@ -9,7 +9,7 @@ export enum SpellConvocation {
 }
 
 export interface BonusEffect {
-    masteryLevelMinimum: number; // 1-100
+    masteryLevelMinimum: number;
     effectsDescription: string;
 }
 
@@ -23,4 +23,6 @@ export interface Spell {
     castingTime: string;
     range: string;
     duration: string;
+    sourceBook: string;
+    sourcePage: number;
 }

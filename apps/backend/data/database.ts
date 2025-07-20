@@ -1,6 +1,6 @@
 import sqlite3 from 'sqlite3';
 import { Spell, SpellConvocation, BonusEffect } from '../models/Spell.js';
-import { Character } from '../models/Character.js';
+import { Character, CharacterRank } from '../models/Character.js';
 
 export class Database {
     private db: sqlite3.Database;
@@ -30,7 +30,8 @@ export class Database {
                 CREATE TABLE IF NOT EXISTS characters (
                     id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
-                    occupation TEXT NOT NULL,
+                    convocations TEXT NOT NULL,
+                    rank TEXT NOT NULL,
                     game TEXT NOT NULL
                 )
             `);
@@ -90,6 +91,77 @@ export class Database {
         });
     }
 
+    updateSpell(spell: Spell): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const stmt = this.db.prepare(`
+                UPDATE spells
+                SET name = ?, convocation = ?, complexity_level = ?, description = ?,
+                    bonus_effects = ?, casting_time = ?, range = ?, duration = ?
+                WHERE id = ?
+            `);
+            stmt.run([
+                spell.name,
+                spell.convocation,
+                spell.complexityLevel,
+                spell.description,
+                JSON.stringify(spell.bonusEffects),
+                spell.castingTime,
+                spell.range,
+                spell.duration,
+                spell.id
+            ], (err) => {
+                if (err) reject(err);
+                else resolve();
+            });
+            stmt.finalize();
+        });
+    }
+
+    deleteSpell(id: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.db.serialize(() => {
+                // First delete character-spell relationships
+                this.db.run('DELETE FROM character_spells WHERE spell_id = ?', [id], (err) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+
+                    // Then delete the spell
+                    this.db.run('DELETE FROM spells WHERE id = ?', [id], (deleteErr) => {
+                        if (deleteErr) {
+                            reject(deleteErr);
+                            return;
+                        }
+                        resolve();
+                    });
+                });
+            });
+        });
+    }
+
+    addSpellToCharacter(characterId: string, spellId: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const stmt = this.db.prepare('INSERT INTO character_spells (character_id, spell_id) VALUES (?, ?)');
+            stmt.run([characterId, spellId], (err) => {
+                if (err) reject(err);
+                else resolve();
+            });
+            stmt.finalize();
+        });
+    }
+
+    removeSpellFromCharacter(characterId: string, spellId: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const stmt = this.db.prepare('DELETE FROM character_spells WHERE character_id = ? AND spell_id = ?');
+            stmt.run([characterId, spellId], (err) => {
+                if (err) reject(err);
+                else resolve();
+            });
+            stmt.finalize();
+        });
+    }
+
     // Character methods
     getAllCharacters(): Promise<Character[]> {
         return new Promise((resolve, reject) => {
@@ -118,15 +190,15 @@ export class Database {
         return new Promise((resolve, reject) => {
             this.db.serialize(() => {
                 const stmt = this.db.prepare(`
-                    INSERT INTO characters (id, name, occupation, game)
-                    VALUES (?, ?, ?, ?)
+                    INSERT INTO characters (id, name, convocations, rank, game)
+                    VALUES (?, ?, ?, ?, ?)
                 `);
-                stmt.run([character.id, character.name, character.occupation, character.game], (err) => {
+                stmt.run([character.id, character.name, JSON.stringify(character.convocations), character.rank, character.game], (err) => {
                     if (err) {
                         reject(err);
                         return;
                     }
-                    
+
                     // Add spell relationships
                     if (character.knownSpellIds.length > 0) {
                         const spellStmt = this.db.prepare('INSERT INTO character_spells (character_id, spell_id) VALUES (?, ?)');
@@ -138,6 +210,65 @@ export class Database {
                     resolve();
                 });
                 stmt.finalize();
+            });
+        });
+    }
+
+    updateCharacter(character: Character): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.db.serialize(() => {
+                const stmt = this.db.prepare(`
+                    UPDATE characters
+                    SET name = ?, convocations = ?, rank = ?, game = ?
+                    WHERE id = ?
+                `);
+                stmt.run([character.name, JSON.stringify(character.convocations), character.rank, character.game, character.id], (err) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+
+                    // Update spell relationships - remove existing and add new ones
+                    this.db.run('DELETE FROM character_spells WHERE character_id = ?', [character.id], (deleteErr) => {
+                        if (deleteErr) {
+                            reject(deleteErr);
+                            return;
+                        }
+
+                        if (character.knownSpellIds.length > 0) {
+                            const spellStmt = this.db.prepare('INSERT INTO character_spells (character_id, spell_id) VALUES (?, ?)');
+                            character.knownSpellIds.forEach(spellId => {
+                                spellStmt.run([character.id, spellId]);
+                            });
+                            spellStmt.finalize();
+                        }
+                        resolve();
+                    });
+                });
+                stmt.finalize();
+            });
+        });
+    }
+
+    deleteCharacter(id: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.db.serialize(() => {
+                // First delete character-spell relationships
+                this.db.run('DELETE FROM character_spells WHERE character_id = ?', [id], (err) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+
+                    // Then delete the character
+                    this.db.run('DELETE FROM characters WHERE id = ?', [id], (deleteErr) => {
+                        if (deleteErr) {
+                            reject(deleteErr);
+                            return;
+                        }
+                        resolve();
+                    });
+                });
             });
         });
     }
@@ -175,7 +306,8 @@ export class Database {
         return {
             id: row.id,
             name: row.name,
-            occupation: row.occupation,
+            convocations: JSON.parse(row.convocations) as SpellConvocation[],
+            rank: row.rank as CharacterRank,
             game: row.game,
             knownSpellIds
         };

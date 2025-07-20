@@ -16,6 +16,22 @@ export class DataStore {
         return await database.addSpell(spell);
     }
 
+    async updateSpell(spell: Spell): Promise<void> {
+        return await database.updateSpell(spell);
+    }
+
+    async deleteSpell(id: string): Promise<void> {
+        return await database.deleteSpell(id);
+    }
+
+    async addSpellToCharacter(characterId: string, spellId: string): Promise<void> {
+        return await database.addSpellToCharacter(characterId, spellId);
+    }
+
+    async removeSpellFromCharacter(characterId: string, spellId: string): Promise<void> {
+        return await database.removeSpellFromCharacter(characterId, spellId);
+    }
+
     // Character methods
     async getAllCharacters(): Promise<Character[]> {
         return await database.getAllCharacters();
@@ -27,6 +43,14 @@ export class DataStore {
 
     async addCharacter(character: Character): Promise<void> {
         return await database.addCharacter(character);
+    }
+
+    async updateCharacter(character: Character): Promise<void> {
+        return await database.updateCharacter(character);
+    }
+
+    async deleteCharacter(id: string): Promise<void> {
+        return await database.deleteCharacter(id);
     }
 
     // Relationship methods
