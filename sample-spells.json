@@ -40,6 +40,24 @@
     "sourcePage": 78
   },
   {
+    "name": "Divine Light",
+    "convocation": "Odivshe",
+    "complexityLevel": 1,
+    "description": "Creates a **bright light** that illuminates the area and *banishes darkness*.",
+    "bonusEffects": [
+      {
+        "masteryLevelMinimum": 60,
+        "effectsDescription": "Light damages undead creatures"
+      }
+    ],
+    "castingTime": "1 action",
+    "range": "Self",
+    "duration": "1 hour",
+    "folderPath": "/Utility",
+    "sourceBook": "HarnMaster Magic",
+    "sourcePage": 82
+  },
+  {
     "name": "Mind Shield",
     "convocation": "Peleahn",
     "complexityLevel": 3,

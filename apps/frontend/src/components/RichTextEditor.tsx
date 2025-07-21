@@ -18,6 +18,8 @@ export function RichTextEditor({
 }: RichTextEditorProps) {
   const [editorValue, setEditorValue] = useState(value)
   const [showPreview, setShowPreview] = useState(false)
+  const [editorHeight, setEditorHeight] = useState(200)
+  const [isResizing, setIsResizing] = useState(false)
 
   useEffect(() => {
     setEditorValue(value)
@@ -44,6 +46,29 @@ export function RichTextEditor({
       textarea.focus()
       textarea.setSelectionRange(start + before.length, end + before.length)
     }, 0)
+  }
+
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault()
+    setIsResizing(true)
+
+    const startY = e.clientY
+    const startHeight = editorHeight
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaY = e.clientY - startY
+      const newHeight = Math.max(100, Math.min(600, startHeight + deltaY))
+      setEditorHeight(newHeight)
+    }
+
+    const handleMouseUp = () => {
+      setIsResizing(false)
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
   }
 
   return (
@@ -104,6 +129,15 @@ export function RichTextEditor({
         >
           "
         </button>
+        <button
+          type="button"
+          onClick={() => insertMarkdown('\n\n| Header 1 | Header 2 | Header 3 |\n|----------|----------|----------|\n| Cell 1   | Cell 2   | Cell 3   |\n| Cell 4   | Cell 5   | Cell 6   |\n\n', '')}
+          disabled={disabled}
+          className="px-2 py-1 text-xs bg-gray-600 hover:bg-gray-500 disabled:bg-gray-800 disabled:cursor-not-allowed text-white rounded transition-colors"
+          title="Table"
+        >
+          ⊞
+        </button>
         <div className="ml-auto">
           <button
             type="button"
@@ -118,32 +152,48 @@ export function RichTextEditor({
       </div>
 
       {/* Editor/Preview Area */}
-      {showPreview ? (
-        <div className={`border border-gray-600 border-t-0 rounded-b-md bg-gray-700 p-3 min-h-[200px] ${error ? 'border-red-500' : ''}`}>
-          <MarkdownRenderer
-            content={editorValue}
-            className="text-gray-300"
+      <div className="relative">
+        {showPreview ? (
+          <div
+            className={`border border-gray-600 border-t-0 rounded-b-md bg-gray-700 p-3 overflow-y-auto ${error ? 'border-red-500' : ''}`}
+            style={{ height: `${editorHeight}px` }}
+          >
+            <MarkdownRenderer
+              content={editorValue}
+              className="text-gray-300"
+            />
+          </div>
+        ) : (
+          <textarea
+            value={editorValue}
+            placeholder={placeholder}
+            onChange={(e) => handleChange(e.target.value)}
+            disabled={disabled}
+            className={`w-full p-3 bg-gray-700 text-white text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              error ? 'border-red-500' : 'border-gray-600'
+            }`}
+            style={{
+              height: `${editorHeight}px`,
+              borderTop: 'none',
+              borderRadius: '0 0 0.375rem 0.375rem',
+              fontSize: '0.875rem',
+              lineHeight: '1.5',
+              fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace'
+            }}
           />
-        </div>
-      ) : (
-        <textarea
-          value={editorValue}
-          placeholder={placeholder}
-          onChange={(e) => handleChange(e.target.value)}
-          disabled={disabled}
-          className={`w-full p-3 bg-gray-700 text-white text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            error ? 'border-red-500' : 'border-gray-600'
+        )}
+
+        {/* Resize Handle */}
+        <div
+          className={`absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize bg-gray-600 hover:bg-gray-500 transition-colors flex items-center justify-center ${
+            isResizing ? 'bg-blue-500' : ''
           }`}
-          style={{
-            minHeight: '200px',
-            borderTop: 'none',
-            borderRadius: '0 0 0.375rem 0.375rem',
-            fontSize: '0.875rem',
-            lineHeight: '1.5',
-            fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace'
-          }}
-        />
-      )}
+          onMouseDown={handleResizeStart}
+          title="Drag to resize"
+        >
+          <div className="w-8 h-0.5 bg-gray-400 rounded"></div>
+        </div>
+      </div>
     </div>
   )
 }

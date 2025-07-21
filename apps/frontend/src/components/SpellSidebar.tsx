@@ -1,7 +1,8 @@
-import {useState, useMemo, useEffect} from 'react'
+import {useState, useMemo, useEffect, useRef} from 'react'
 import type { Spell } from '../types'
 import { FolderTreeNode } from './FolderTreeNode'
 import { buildFolderTree, type FolderTreeState } from '../utils/folderTree'
+import { AddContextMenu } from './AddContextMenu'
 
 interface SpellSidebarProps {
   spells: Spell[]
@@ -9,6 +10,7 @@ interface SpellSidebarProps {
   onSpellSelect: (spell: Spell) => void
   onSpellsChange: () => void
   onAddSpell: () => void
+  onAddFolder: () => void
   onEditSpell: () => void
   onDeleteSpell: () => void
   onImportSpells: () => void
@@ -24,6 +26,7 @@ export function SpellSidebar({
   onSpellSelect,
   onSpellsChange,
   onAddSpell,
+  onAddFolder,
   onEditSpell,
   onDeleteSpell,
   onImportSpells,
@@ -37,6 +40,8 @@ export function SpellSidebar({
     '/': true // Root is always expanded
   })
   const [emptyFolders, setEmptyFolders] = useState<string[]>([])
+  const [showContextMenu, setShowContextMenu] = useState(false)
+  const addButtonRef = useRef<HTMLButtonElement>(null)
 
   // Fetch empty folders
   useEffect(() => {
@@ -71,6 +76,27 @@ export function SpellSidebar({
 
     const updatedSpell = { ...spell, folderPath: newFolderPath }
     onUpdateSpell(updatedSpell)
+  }
+
+  const handleMoveFolder = async (sourcePath: string, targetParentPath: string) => {
+    try {
+      const response = await fetch('/api/folders/move', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sourcePath, targetParentPath }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to move folder')
+      }
+
+      // Refresh the spell list to pick up the moved folder
+      onSpellsChange()
+    } catch (error) {
+      console.error('Failed to move folder:', error)
+    }
   }
 
   const handleCreateFolder = async (parentPath: string, folderName: string) => {
@@ -159,15 +185,22 @@ export function SpellSidebar({
   return (
     <div className="w-80 flex-shrink-0 bg-gray-800 border-l border-gray-700 flex flex-col">
       <div className="p-4 border-b border-gray-700 flex justify-between items-center h-[76px]">
-        <h2 className="text-xl font-semibold">Spells</h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 relative">
           <button
-            onClick={onAddSpell}
+            ref={addButtonRef}
+            onClick={() => setShowContextMenu(!showContextMenu)}
             className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm transition-colors"
-            title="Add Spell"
+            title="Add Spell or Folder"
           >
             +
           </button>
+          <AddContextMenu
+            isOpen={showContextMenu}
+            onClose={() => setShowContextMenu(false)}
+            onAddSpell={onAddSpell}
+            onAddFolder={onAddFolder}
+            buttonRef={addButtonRef}
+          />
           <button
             onClick={onEditSpell}
             disabled={!selectedSpell}
@@ -216,6 +249,7 @@ export function SpellSidebar({
             onRenameFolder={handleRenameFolder}
             onDeleteFolder={handleDeleteFolder}
             onMoveSpell={handleMoveSpell}
+            onMoveFolder={handleMoveFolder}
           />
         )}
       </div>

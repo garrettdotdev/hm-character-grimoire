@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Sidebar } from './components/Sidebar'
 import { MainContent } from './components/MainContent'
 import { SpellSidebar } from './components/SpellSidebar'
 import { Modal } from './components/Modal'
+import { ProtectedModal } from './components/ProtectedModal'
 import { CharacterForm } from './components/AddCharacterForm'
 import { DeleteCharacterDialog } from './components/DeleteCharacterDialog'
 import { SpellForm } from './components/SpellForm'
 import { DeleteSpellDialog } from './components/DeleteSpellDialog'
 import { SpellImportModal } from './components/SpellImportModal'
+import { AddFolderModal } from './components/AddFolderModal'
 import { NotificationBanner } from './components/NotificationBanner'
 import type { Character, Spell } from './types'
 import './App.css'
@@ -26,12 +28,67 @@ function App() {
   const [showEditSpellModal, setShowEditSpellModal] = useState(false)
   const [showDeleteSpellModal, setShowDeleteSpellModal] = useState(false)
   const [showImportSpellModal, setShowImportSpellModal] = useState(false)
+  const [showAddFolderModal, setShowAddFolderModal] = useState(false)
   const [characterFormLoading, setCharacterFormLoading] = useState(false)
   const [spellFormLoading, setSpellFormLoading] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteSpellLoading, setDeleteSpellLoading] = useState(false)
   const [importLoading, setImportLoading] = useState(false)
+  const [folderFormLoading, setFolderFormLoading] = useState(false)
   const [notification, setNotification] = useState<{ message: string; type: 'info' | 'warning' | 'error' | 'success' } | null>(null)
+
+  // Dirty state tracking for forms
+  const [isCharacterFormDirty, setIsCharacterFormDirty] = useState(false)
+  const [isSpellFormDirty, setIsSpellFormDirty] = useState(false)
+
+  // Reset dirty state when modals close
+  const handleCloseAddCharacterModal = () => {
+    setShowAddModal(false)
+    setIsCharacterFormDirty(false)
+  }
+
+  const handleCloseEditCharacterModal = () => {
+    setShowEditModal(false)
+    setIsCharacterFormDirty(false)
+  }
+
+  const handleCloseAddSpellModal = () => {
+    setShowAddSpellModal(false)
+    setIsSpellFormDirty(false)
+  }
+
+  const handleCloseEditSpellModal = () => {
+    setShowEditSpellModal(false)
+    setIsSpellFormDirty(false)
+  }
+
+  // Memoize initial data to prevent unnecessary re-renders
+  const editSpellInitialData = useMemo(() => {
+    if (!selectedSpell) return undefined
+    return {
+      name: selectedSpell.name,
+      convocation: selectedSpell.convocation,
+      complexityLevel: selectedSpell.complexityLevel,
+      description: selectedSpell.description,
+      bonusEffects: selectedSpell.bonusEffects,
+      castingTime: selectedSpell.castingTime,
+      range: selectedSpell.range,
+      duration: selectedSpell.duration,
+      folderPath: selectedSpell.folderPath,
+      sourceBook: selectedSpell.sourceBook,
+      sourcePage: selectedSpell.sourcePage
+    }
+  }, [selectedSpell])
+
+  const editCharacterInitialData = useMemo(() => {
+    if (!selectedCharacter) return undefined
+    return {
+      name: selectedCharacter.name,
+      convocations: selectedCharacter.convocations,
+      rank: selectedCharacter.rank,
+      game: selectedCharacter.game
+    }
+  }, [selectedCharacter])
   const [grimoireRefreshTrigger, setGrimoireRefreshTrigger] = useState(0)
 
   useEffect(() => {
@@ -275,6 +332,36 @@ function App() {
     }
   }
 
+  const handleCreateFolder = async (folderPath: string) => {
+    setFolderFormLoading(true)
+    try {
+      const response = await fetch('/api/folders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ folderPath }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create folder')
+      }
+
+      setNotification({
+        message: `Successfully created folder: ${folderPath}`,
+        type: 'success'
+      })
+      setShowAddFolderModal(false)
+      await fetchSpells() // Refresh the spell list to pick up the new folder
+    } catch (error) {
+      console.error('Failed to create folder:', error)
+      setNotification({ message: 'Failed to create folder', type: 'error' })
+      throw error
+    } finally {
+      setFolderFormLoading(false)
+    }
+  }
+
   const handleUpdateSpell = async (updatedSpell: Spell) => {
     try {
       const response = await fetch(`/api/spells/${updatedSpell.id}`, {
@@ -398,6 +485,7 @@ function App() {
         onSpellSelect={setSelectedSpell}
         onSpellsChange={fetchSpells}
         onAddSpell={() => setShowAddSpellModal(true)}
+        onAddFolder={() => setShowAddFolderModal(true)}
         onEditSpell={() => setShowEditSpellModal(true)}
         onDeleteSpell={() => setShowDeleteSpellModal(true)}
         onImportSpells={() => setShowImportSpellModal(true)}
@@ -408,38 +496,39 @@ function App() {
       />
 
       {/* Add Character Modal */}
-      <Modal
+      <ProtectedModal
         isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
+        onClose={handleCloseAddCharacterModal}
         title="Add New Character"
+        isDirty={isCharacterFormDirty}
+        confirmMessage="You have unsaved changes to this character that will be lost if you close this dialog."
       >
         <CharacterForm
           onSave={handleAddCharacter}
-          onCancel={() => setShowAddModal(false)}
+          onCancel={handleCloseAddCharacterModal}
           loading={characterFormLoading}
           mode="create"
+          onDirtyChange={setIsCharacterFormDirty}
         />
-      </Modal>
+      </ProtectedModal>
 
       {/* Edit Character Modal */}
-      <Modal
+      <ProtectedModal
         isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
+        onClose={handleCloseEditCharacterModal}
         title="Edit Character"
+        isDirty={isCharacterFormDirty}
+        confirmMessage="You have unsaved changes to this character that will be lost if you close this dialog."
       >
         <CharacterForm
           onSave={handleEditCharacter}
-          onCancel={() => setShowEditModal(false)}
+          onCancel={handleCloseEditCharacterModal}
           loading={characterFormLoading}
-          initialData={selectedCharacter ? {
-            name: selectedCharacter.name,
-            convocations: selectedCharacter.convocations,
-            rank: selectedCharacter.rank,
-            game: selectedCharacter.game
-          } : undefined}
+          initialData={editCharacterInitialData}
           mode="edit"
+          onDirtyChange={setIsCharacterFormDirty}
         />
-      </Modal>
+      </ProtectedModal>
 
       {/* Delete Character Modal */}
       {selectedCharacter && (
@@ -458,49 +547,43 @@ function App() {
       )}
 
       {/* Add Spell Modal */}
-      <Modal
+      <ProtectedModal
         isOpen={showAddSpellModal}
-        onClose={() => setShowAddSpellModal(false)}
+        onClose={handleCloseAddSpellModal}
         title="Add New Spell"
         size="lg"
+        isDirty={isSpellFormDirty}
+        confirmMessage="You have unsaved changes to this spell that will be lost if you close this dialog."
       >
         <SpellForm
           onSave={handleAddSpell}
-          onCancel={() => setShowAddSpellModal(false)}
+          onCancel={handleCloseAddSpellModal}
           loading={spellFormLoading}
           mode="create"
           allSpells={spells}
+          onDirtyChange={setIsSpellFormDirty}
         />
-      </Modal>
+      </ProtectedModal>
 
       {/* Edit Spell Modal */}
-      <Modal
+      <ProtectedModal
         isOpen={showEditSpellModal}
-        onClose={() => setShowEditSpellModal(false)}
+        onClose={handleCloseEditSpellModal}
         title="Edit Spell"
         size="lg"
+        isDirty={isSpellFormDirty}
+        confirmMessage="You have unsaved changes to this spell that will be lost if you close this dialog."
       >
         <SpellForm
           onSave={handleEditSpell}
-          onCancel={() => setShowEditSpellModal(false)}
+          onCancel={handleCloseEditSpellModal}
           loading={spellFormLoading}
-          initialData={selectedSpell ? {
-            name: selectedSpell.name,
-            convocation: selectedSpell.convocation,
-            complexityLevel: selectedSpell.complexityLevel,
-            description: selectedSpell.description,
-            bonusEffects: selectedSpell.bonusEffects,
-            castingTime: selectedSpell.castingTime,
-            range: selectedSpell.range,
-            duration: selectedSpell.duration,
-            folderPath: selectedSpell.folderPath,
-            sourceBook: selectedSpell.sourceBook,
-            sourcePage: selectedSpell.sourcePage
-          } : undefined}
+          initialData={editSpellInitialData}
           mode="edit"
           allSpells={spells}
+          onDirtyChange={setIsSpellFormDirty}
         />
-      </Modal>
+      </ProtectedModal>
 
       {/* Delete Spell Modal */}
       {selectedSpell && (
@@ -528,6 +611,20 @@ function App() {
           onImport={handleImportSpells}
           onCancel={() => setShowImportSpellModal(false)}
           loading={importLoading}
+        />
+      </Modal>
+
+      {/* Add Folder Modal */}
+      <Modal
+        isOpen={showAddFolderModal}
+        onClose={() => setShowAddFolderModal(false)}
+        title="Add New Folder"
+      >
+        <AddFolderModal
+          onSave={handleCreateFolder}
+          onCancel={() => setShowAddFolderModal(false)}
+          loading={folderFormLoading}
+          allFolders={spells.map(s => s.folderPath).filter((path, index, arr) => arr.indexOf(path) === index)}
         />
       </Modal>
 

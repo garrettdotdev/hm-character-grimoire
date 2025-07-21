@@ -3,6 +3,7 @@ import {type BonusEffect, type Spell, SpellConvocation} from '../types'
 import { FolderPicker } from './FolderPicker'
 import { RichTextEditor } from './RichTextEditor'
 import { BonusEffectEditor } from './BonusEffectEditor'
+import { useFormDirty } from '../hooks/useFormDirty'
 
 interface SpellFormProps {
   onSave: (spell: {
@@ -22,6 +23,7 @@ interface SpellFormProps {
   loading?: boolean
   initialData?: Omit<Spell, 'id'>
   mode?: 'create' | 'edit'
+  onDirtyChange?: (isDirty: boolean) => void
   allSpells?: Spell[] // For extracting existing folder paths
 }
 
@@ -31,7 +33,8 @@ export function SpellForm({
   loading = false,
   initialData,
   mode = 'create',
-  allSpells = []
+  allSpells = [],
+  onDirtyChange
 }: SpellFormProps) {
   const [formData, setFormData] = useState({
     name: initialData?.name || '',
@@ -47,6 +50,28 @@ export function SpellForm({
     sourcePage: initialData?.sourcePage || 0
   })
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
+
+  // Dirty state tracking
+  const initialFormData = {
+    name: initialData?.name || '',
+    convocation: initialData?.convocation || '',
+    complexityLevel: initialData?.complexityLevel || 1,
+    description: initialData?.description || '',
+    bonusEffects: initialData?.bonusEffects || [],
+    castingTime: initialData?.castingTime || '',
+    range: initialData?.range || '',
+    duration: initialData?.duration || '',
+    folderPath: initialData?.folderPath || '/',
+    sourceBook: initialData?.sourceBook || '',
+    sourcePage: initialData?.sourcePage || 0
+  }
+
+  const { isDirty, updateData, markClean } = useFormDirty(initialFormData)
+
+  // Notify parent of dirty state changes
+  useEffect(() => {
+    onDirtyChange?.(isDirty)
+  }, [isDirty, onDirtyChange])
 
   // Update form data when initialData changes (for edit mode)
   useEffect(() => {
@@ -109,13 +134,17 @@ export function SpellForm({
     
     try {
       await onSave(formData)
+      markClean(formData) // Mark form as clean after successful save
     } catch (error) {
       console.error('Failed to save spell:', error)
     }
   }
 
   const handleChange = (field: string, value: string | number) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    const newFormData = { ...formData, [field]: value }
+    setFormData(newFormData)
+    updateData(newFormData)
+
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }))
@@ -128,19 +157,24 @@ export function SpellForm({
       masteryLevelMinimum: 50,
       effectsDescription: ''
     }
-    setFormData(prev => ({
-      ...prev,
-      bonusEffects: [...prev.bonusEffects, newBonusEffect]
-    }))
+    const newFormData = {
+      ...formData,
+      bonusEffects: [...formData.bonusEffects, newBonusEffect]
+    }
+    setFormData(newFormData)
+    updateData(newFormData)
   }
 
   const handleUpdateBonusEffect = (index: number, bonusEffect: BonusEffect) => {
-    setFormData(prev => ({
-      ...prev,
-      bonusEffects: prev.bonusEffects.map((effect, i) =>
+    const newFormData = {
+      ...formData,
+      bonusEffects: formData.bonusEffects.map((effect, i) =>
         i === index ? bonusEffect : effect
       )
-    }))
+    }
+    setFormData(newFormData)
+    updateData(newFormData)
+
     // Clear any bonus effect errors
     if (errors[`bonusEffect_${index}`]) {
       setErrors(prev => ({ ...prev, [`bonusEffect_${index}`]: '' }))
@@ -148,10 +182,13 @@ export function SpellForm({
   }
 
   const handleRemoveBonusEffect = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      bonusEffects: prev.bonusEffects.filter((_, i) => i !== index)
-    }))
+    const newFormData = {
+      ...formData,
+      bonusEffects: formData.bonusEffects.filter((_, i) => i !== index)
+    }
+    setFormData(newFormData)
+    updateData(newFormData)
+
     // Clear any bonus effect errors for this index
     setErrors(prev => {
       const newErrors = { ...prev }

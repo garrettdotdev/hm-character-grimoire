@@ -23,7 +23,6 @@ export function Sidebar({
   return (
     <div className="w-80 flex-shrink-0 bg-gray-800 border-r border-gray-700 flex flex-col">
       <div className="p-4 border-b border-gray-700 flex justify-between items-center h-[76px]">
-        <h2 className="text-xl font-semibold">Characters</h2>
         <div className="flex gap-2">
           <button
             onClick={onAddCharacter}

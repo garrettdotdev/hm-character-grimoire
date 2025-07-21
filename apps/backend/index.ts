@@ -299,6 +299,32 @@ app.delete('/api/folders', async (req, res) => {
     }
 });
 
+// Folder move endpoint
+app.patch('/api/folders/move', async (req, res) => {
+    try {
+        const { sourcePath, targetParentPath } = req.body;
+
+        if (!sourcePath || !targetParentPath) {
+            return res.status(400).json({ error: 'Both sourcePath and targetParentPath are required' });
+        }
+
+        // Prevent moving a folder into itself or its descendants
+        if (targetParentPath.startsWith(sourcePath + '/') || targetParentPath === sourcePath) {
+            return res.status(400).json({ error: 'Cannot move folder into itself or its descendants' });
+        }
+
+        // Extract folder name from source path
+        const folderName = sourcePath.substring(sourcePath.lastIndexOf('/') + 1);
+        const newPath = targetParentPath === '/' ? `/${folderName}` : `${targetParentPath}/${folderName}`;
+
+        await dataStore.renameFolder(sourcePath, newPath);
+        res.status(200).json({ message: 'Folder moved successfully', newPath });
+    } catch (error) {
+        console.error('Failed to move folder:', error);
+        res.status(500).json({ error: 'Failed to move folder' });
+    }
+});
+
 // Character routes
 app.get('/api/characters', async (req, res) => {
     try {

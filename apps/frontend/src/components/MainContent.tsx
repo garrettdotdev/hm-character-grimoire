@@ -21,6 +21,7 @@ export function MainContent({
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedConvocation, setSelectedConvocation] = useState<string>('all')
   const [selectedComplexity, setSelectedComplexity] = useState<string>('all')
+  const [sortBy, setSortBy] = useState<'name' | 'complexity'>('name')
   const [loading, setLoading] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
   const [selectedSpell, setSelectedSpell] = useState<Spell | null>(null)
@@ -38,7 +39,7 @@ export function MainContent({
 
   useEffect(() => {
     filterSpells()
-  }, [spells, searchTerm, selectedConvocation, selectedComplexity])
+  }, [spells, searchTerm, selectedConvocation, selectedComplexity, sortBy])
 
   const fetchCharacterSpells = async (characterId: string) => {
     setLoading(true)
@@ -73,6 +74,38 @@ export function MainContent({
     }
 
     setFilteredSpells(filtered)
+  }
+
+  // Group spells by convocation and sort within each group
+  const getGroupedAndSortedSpells = () => {
+    const grouped: { [convocation: string]: Spell[] } = {}
+
+    // Group spells by convocation
+    filteredSpells.forEach(spell => {
+      if (!grouped[spell.convocation]) {
+        grouped[spell.convocation] = []
+      }
+      grouped[spell.convocation].push(spell)
+    })
+
+    // Sort spells within each convocation group
+    Object.keys(grouped).forEach(convocation => {
+      grouped[convocation].sort((a, b) => {
+        if (sortBy === 'name') {
+          return a.name.localeCompare(b.name)
+        } else {
+          return a.complexityLevel - b.complexityLevel
+        }
+      })
+    })
+
+    // Sort convocations alphabetically
+    const sortedConvocations = Object.keys(grouped).sort()
+
+    return sortedConvocations.map(convocation => ({
+      convocation,
+      spells: grouped[convocation]
+    }))
   }
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -148,6 +181,15 @@ export function MainContent({
               <option key={level} value={level.toString()}>Level {level}</option>
             ))}
           </select>
+
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as 'name' | 'complexity')}
+            className="px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
+          >
+            <option value="name">Sort by Name</option>
+            <option value="complexity">Sort by Complexity</option>
+          </select>
         </div>
       </div>
 
@@ -179,15 +221,31 @@ export function MainContent({
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(256px,1fr))] gap-4">
-            {filteredSpells.map(spell => (
-              <SpellCard
-                key={spell.id}
-                spell={spell}
-                size="medium"
-                onRemove={() => handleRemoveSpell(spell.id)}
-                onClick={() => setSelectedSpell(spell)}
-              />
+          <div className="space-y-8">
+            {getGroupedAndSortedSpells().map(({ convocation, spells }) => (
+              <div key={convocation} className="space-y-4">
+                {/* Convocation Section Header */}
+                <div className="flex items-center">
+                  <div className="flex-1 border-t border-gray-600"></div>
+                  <h2 className="px-6 text-xl font-semibold text-white text-center">
+                    {convocation}
+                  </h2>
+                  <div className="flex-1 border-t border-gray-600"></div>
+                </div>
+
+                {/* Spell Cards Grid */}
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(256px,1fr))] gap-4">
+                  {spells.map(spell => (
+                    <SpellCard
+                      key={spell.id}
+                      spell={spell}
+                      size="medium"
+                      onRemove={() => handleRemoveSpell(spell.id)}
+                      onClick={() => setSelectedSpell(spell)}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -197,6 +255,7 @@ export function MainContent({
           <SpellDetailsModal
             spell={selectedSpell}
             onClose={() => setSelectedSpell(null)}
+            isOpen={!!selectedSpell}
           />
         )}
 

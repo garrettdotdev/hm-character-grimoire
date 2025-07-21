@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { type Character, SpellConvocation, CharacterRank } from '../types'
+import { useFormDirty } from '../hooks/useFormDirty'
 
 interface CharacterFormProps {
   onSave: (character: {
@@ -12,6 +13,7 @@ interface CharacterFormProps {
   loading?: boolean
   initialData?: Omit<Character, 'id'>
   mode?: 'create' | 'edit'
+  onDirtyChange?: (isDirty: boolean) => void
 }
 
 export function CharacterForm({
@@ -19,7 +21,8 @@ export function CharacterForm({
   onCancel,
   loading = false,
   initialData,
-  mode = 'create'
+  mode = 'create',
+  onDirtyChange
 }: CharacterFormProps) {
   const [formData, setFormData] = useState({
     name: initialData?.name || '',
@@ -28,6 +31,21 @@ export function CharacterForm({
     game: initialData?.game || ''
   })
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
+
+  // Dirty state tracking
+  const initialFormData = {
+    name: initialData?.name || '',
+    convocations: initialData?.convocations || [],
+    rank: initialData?.rank || '',
+    game: initialData?.game || ''
+  }
+
+  const { isDirty, updateData, markClean } = useFormDirty(initialFormData)
+
+  // Notify parent of dirty state changes
+  useEffect(() => {
+    onDirtyChange?.(isDirty)
+  }, [isDirty, onDirtyChange])
 
   // Update form data when initialData changes (for edit mode)
   useEffect(() => {
@@ -67,13 +85,17 @@ export function CharacterForm({
     
     try {
       await onSave(formData)
+      markClean(formData) // Mark form as clean after successful save
     } catch (error) {
       console.error('Failed to save character:', error)
     }
   }
 
   const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    const newFormData = { ...formData, [field]: value }
+    setFormData(newFormData)
+    updateData(newFormData)
+
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }))
@@ -81,13 +103,13 @@ export function CharacterForm({
   }
 
   const handleConvocationChange = (convocation: SpellConvocation, checked: boolean) => {
-    setFormData(prev => {
-      const newConvocations = checked
-        ? [...prev.convocations, convocation]
-        : prev.convocations.filter(c => c !== convocation)
+    const newConvocations = checked
+      ? [...formData.convocations, convocation]
+      : formData.convocations.filter(c => c !== convocation)
 
-      return { ...prev, convocations: newConvocations }
-    })
+    const newFormData = { ...formData, convocations: newConvocations }
+    setFormData(newFormData)
+    updateData(newFormData)
 
     // Clear error when user makes a selection
     if (errors.convocations) {

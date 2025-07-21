@@ -212,15 +212,39 @@ export class Database {
     renameFolder(oldPath: string, newPath: string): Promise<void> {
         return new Promise((resolve, reject) => {
             this.db.serialize(() => {
-                // Update folder paths in spells
-                this.db.run('UPDATE spells SET folder_path = ? WHERE folder_path = ?', [newPath, oldPath], (err) => {
+                // Update folder paths in spells - handle both exact matches and nested paths
+                this.db.run(`
+                    UPDATE spells
+                    SET folder_path = CASE
+                        WHEN folder_path = ? THEN ?
+                        WHEN folder_path LIKE ? THEN ? || SUBSTR(folder_path, ?)
+                        ELSE folder_path
+                    END
+                    WHERE folder_path = ? OR folder_path LIKE ?
+                `, [
+                    oldPath, newPath,                           // Exact match case
+                    oldPath + '/%', newPath, oldPath.length + 1, // Nested path case
+                    oldPath, oldPath + '/%'                     // WHERE conditions
+                ], (err) => {
                     if (err) {
                         reject(err);
                         return;
                     }
 
-                    // Update folder paths in folders table
-                    this.db.run('UPDATE folders SET folder_path = ? WHERE folder_path = ?', [newPath, oldPath], (updateErr) => {
+                    // Update folder paths in folders table - handle both exact matches and nested paths
+                    this.db.run(`
+                        UPDATE folders
+                        SET folder_path = CASE
+                            WHEN folder_path = ? THEN ?
+                            WHEN folder_path LIKE ? THEN ? || SUBSTR(folder_path, ?)
+                            ELSE folder_path
+                        END
+                        WHERE folder_path = ? OR folder_path LIKE ?
+                    `, [
+                        oldPath, newPath,                           // Exact match case
+                        oldPath + '/%', newPath, oldPath.length + 1, // Nested path case
+                        oldPath, oldPath + '/%'                     // WHERE conditions
+                    ], (updateErr) => {
                         if (updateErr) {
                             reject(updateErr);
                             return;

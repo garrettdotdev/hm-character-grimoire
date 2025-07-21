@@ -14,6 +14,7 @@ interface FolderTreeNodeProps {
   onRenameFolder?: (path: string, newName: string) => void
   onDeleteFolder?: (path: string) => void
   onMoveSpell?: (spellId: string, newFolderPath: string) => void
+  onMoveFolder?: (sourcePath: string, targetParentPath: string) => void
 }
 
 export function FolderTreeNode({
@@ -27,13 +28,16 @@ export function FolderTreeNode({
   onCreateFolder,
   onRenameFolder,
   onDeleteFolder,
-  onMoveSpell
+  onMoveSpell,
+  onMoveFolder
 }: FolderTreeNodeProps) {
   const [showContextMenu, setShowContextMenu] = useState(false)
   const [isRenaming, setIsRenaming] = useState(false)
   const [renameValue, setRenameValue] = useState(node.name)
   const [isCreatingSubfolder, setIsCreatingSubfolder] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
+  const [isDragging, setIsDragging] = useState(false)
+  const [isDragOver, setIsDragOver] = useState(false)
 
   const indentLevel = level * 16 // 16px per level
 
@@ -43,26 +47,58 @@ export function FolderTreeNode({
 
   const handleSpellDragStart = (e: React.DragEvent, spell: Spell) => {
     e.dataTransfer.setData('application/json', JSON.stringify(spell))
+    e.dataTransfer.setData('text/plain', 'spell') // Type identifier
     // Support both copy (to character) and move (between folders)
     e.dataTransfer.effectAllowed = 'copyMove'
+  }
+
+  const handleFolderDragStart = (e: React.DragEvent) => {
+    e.stopPropagation() // Prevent parent folder drag events
+    setIsDragging(true)
+    const folderData = {
+      path: node.path,
+      name: node.name
+    }
+    e.dataTransfer.setData('application/json', JSON.stringify(folderData))
+    e.dataTransfer.setData('text/plain', 'folder') // Type identifier
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleFolderDragEnd = () => {
+    setIsDragging(false)
   }
 
   const handleFolderDragOver = (e: React.DragEvent) => {
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
+    setIsDragOver(true)
+  }
+
+  const handleFolderDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(false)
   }
 
   const handleFolderDrop = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    
+    setIsDragOver(false)
+
     try {
-      const spellData = JSON.parse(e.dataTransfer.getData('application/json'))
-      if (spellData.id && onMoveSpell) {
-        onMoveSpell(spellData.id, node.path)
+      const dragType = e.dataTransfer.getData('text/plain')
+      const dragData = JSON.parse(e.dataTransfer.getData('application/json'))
+
+      if (dragType === 'spell' && dragData.id && onMoveSpell) {
+        // Moving a spell to this folder
+        onMoveSpell(dragData.id, node.path)
+      } else if (dragType === 'folder' && dragData.path && onMoveFolder) {
+        // Moving a folder to this folder
+        if (dragData.path !== node.path && !node.path.startsWith(dragData.path + '/')) {
+          onMoveFolder(dragData.path, node.path)
+        }
       }
     } catch (error) {
-      console.error('Failed to move spell:', error)
+      console.error('Failed to move item:', error)
     }
   }
 
@@ -113,9 +149,17 @@ export function FolderTreeNode({
       {/* Folder Header (only show for non-root) */}
       {node.path !== '/' && (
         <div
-          className="flex items-center py-1 px-2 hover:bg-gray-700 cursor-pointer relative group"
+          className={`flex items-center py-1 px-2 hover:bg-gray-700 cursor-pointer relative group transition-colors ${
+            isDragging ? 'opacity-50' : ''
+          } ${
+            isDragOver ? 'bg-blue-600' : ''
+          }`}
           style={{ paddingLeft: `${indentLevel}px` }}
+          draggable={true}
+          onDragStart={handleFolderDragStart}
+          onDragEnd={handleFolderDragEnd}
           onDragOver={handleFolderDragOver}
+          onDragLeave={handleFolderDragLeave}
           onDrop={handleFolderDrop}
           onContextMenu={(e) => {
             e.preventDefault()
@@ -248,6 +292,7 @@ export function FolderTreeNode({
               onRenameFolder={onRenameFolder}
               onDeleteFolder={onDeleteFolder}
               onMoveSpell={onMoveSpell}
+              onMoveFolder={onMoveFolder}
             />
           ))}
 
