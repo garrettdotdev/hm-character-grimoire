@@ -1,0 +1,104 @@
+[
+  {
+    "name": "Flame Bolt",
+    "convocation": "Fyvria",
+    "complexityLevel": 1,
+    "description": "A **basic fire spell** that hurls a bolt of flame at a target, dealing *fire damage*.\n\n**Effects:**\n- Range: 60 feet\n- Damage: 1d6 + caster level\n- **Critical Hit:** Target catches fire for 1 round",
+    "bonusEffects": [
+      {
+        "masteryLevelMinimum": 3,
+        "effectsDescription": "Increased damage and chance to ignite target"
+      }
+    ],
+    "castingTime": "1 action",
+    "range": "60 feet",
+    "duration": "Instantaneous",
+    "folderPath": "/Combat",
+    "sourceBook": "HarnMaster Magic",
+    "sourcePage": 45
+  },
+  {
+    "name": "Healing Touch",
+    "convocation": "Odivshe",
+    "complexityLevel": 2,
+    "description": "A **gentle healing spell** that restores health to the target through *divine energy*.\n\n> *\"The touch of Odivshe brings comfort to the wounded.\"*\n\n**Healing Amount:** 2d4 + Wisdom modifier\n\n**Special:** Can be cast as a ritual to double the healing amount.",
+    "bonusEffects": [
+      {
+        "masteryLevelMinimum": 2,
+        "effectsDescription": "Removes minor ailments"
+      },
+      {
+        "masteryLevelMinimum": 5,
+        "effectsDescription": "Can heal critical wounds"
+      }
+    ],
+    "castingTime": "1 action",
+    "range": "Touch",
+    "duration": "Instantaneous",
+    "folderPath": "/Healing",
+    "sourceBook": "HarnMaster Magic",
+    "sourcePage": 78
+  },
+  {
+    "name": "Mind Shield",
+    "convocation": "Peleahn",
+    "complexityLevel": 3,
+    "description": "Creates a protective barrier around the mind, defending against mental intrusions and psychic attacks.",
+    "bonusEffects": [
+      {
+        "masteryLevelMinimum": 4,
+        "effectsDescription": "Reflects mental attacks back to attacker"
+      }
+    ],
+    "castingTime": "1 action",
+    "range": "Self",
+    "duration": "10 minutes",
+    "folderPath": "/Protection",
+    "sourceBook": "HarnMaster Magic",
+    "sourcePage": 112
+  },
+  {
+    "name": "Nature's Call",
+    "convocation": "Savorya",
+    "complexityLevel": 2,
+    "description": "Allows communication with animals and plants in the immediate area.",
+    "bonusEffects": [
+      {
+        "masteryLevelMinimum": 3,
+        "effectsDescription": "Can command simple actions from animals"
+      }
+    ],
+    "castingTime": "1 minute",
+    "range": "30 feet",
+    "duration": "1 hour",
+    "folderPath": "/Communication",
+    "sourceBook": "HarnMaster Magic",
+    "sourcePage": 156
+  },
+  {
+    "name": "Shadow Step",
+    "convocation": "Lyahvi",
+    "complexityLevel": 4,
+    "description": "Allows the caster to **teleport through shadows** from one location to another.\n\n*The caster must be able to see the destination shadow.*",
+    "bonusEffects": [
+      {
+        "masteryLevelMinimum": 60,
+        "effectsDescription": "Can bring one additional person"
+      },
+      {
+        "masteryLevelMinimum": 80,
+        "effectsDescription": "Range increases to 1000 feet"
+      },
+      {
+        "masteryLevelMinimum": 90,
+        "effectsDescription": "Can teleport to any shadow within range, even if not visible"
+      }
+    ],
+    "castingTime": "1 action",
+    "range": "500 feet",
+    "duration": "Instantaneous",
+    "folderPath": "/Movement",
+    "sourceBook": "HarnMaster Magic",
+    "sourcePage": 203
+  }
+]

@@ -7,6 +7,7 @@ import { CharacterForm } from './components/AddCharacterForm'
 import { DeleteCharacterDialog } from './components/DeleteCharacterDialog'
 import { SpellForm } from './components/SpellForm'
 import { DeleteSpellDialog } from './components/DeleteSpellDialog'
+import { SpellImportModal } from './components/SpellImportModal'
 import { NotificationBanner } from './components/NotificationBanner'
 import type { Character, Spell } from './types'
 import './App.css'
@@ -24,10 +25,12 @@ function App() {
   const [showAddSpellModal, setShowAddSpellModal] = useState(false)
   const [showEditSpellModal, setShowEditSpellModal] = useState(false)
   const [showDeleteSpellModal, setShowDeleteSpellModal] = useState(false)
+  const [showImportSpellModal, setShowImportSpellModal] = useState(false)
   const [characterFormLoading, setCharacterFormLoading] = useState(false)
   const [spellFormLoading, setSpellFormLoading] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteSpellLoading, setDeleteSpellLoading] = useState(false)
+  const [importLoading, setImportLoading] = useState(false)
   const [notification, setNotification] = useState<{ message: string; type: 'info' | 'warning' | 'error' | 'success' } | null>(null)
   const [grimoireRefreshTrigger, setGrimoireRefreshTrigger] = useState(0)
 
@@ -228,6 +231,50 @@ function App() {
     }
   }
 
+  const handleImportSpells = async (spellsData: any[]) => {
+    setImportLoading(true)
+    try {
+      const response = await fetch('/api/spells/import', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ spells: spellsData }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        // Handle validation errors
+        if (result.details && Array.isArray(result.details)) {
+          const errorMessage = `Import failed:\n${result.details.slice(0, 5).join('\n')}${
+            result.details.length > 5 ? `\n... and ${result.details.length - 5} more errors` : ''
+          }`
+          setNotification({ message: errorMessage, type: 'error' })
+        } else {
+          setNotification({ message: result.error || 'Import failed', type: 'error' })
+        }
+        throw new Error(result.error || 'Import failed')
+      }
+
+      // Success
+      setNotification({
+        message: `Successfully imported ${result.importedCount} spells`,
+        type: 'success'
+      })
+      setShowImportSpellModal(false)
+      await fetchSpells() // Refresh the spell list
+    } catch (error) {
+      console.error('Failed to import spells:', error)
+      if (!notification) { // Only show generic error if we haven't already shown a specific one
+        setNotification({ message: 'Failed to import spells', type: 'error' })
+      }
+      throw error
+    } finally {
+      setImportLoading(false)
+    }
+  }
+
   const handleUpdateSpell = async (updatedSpell: Spell) => {
     try {
       const response = await fetch(`/api/spells/${updatedSpell.id}`, {
@@ -353,6 +400,7 @@ function App() {
         onAddSpell={() => setShowAddSpellModal(true)}
         onEditSpell={() => setShowEditSpellModal(true)}
         onDeleteSpell={() => setShowDeleteSpellModal(true)}
+        onImportSpells={() => setShowImportSpellModal(true)}
         onAddSpellToCharacter={(spell) => handleAddSpellToCharacter(spell.id)}
         hasSelectedCharacter={!!selectedCharacter}
         loading={spellsLoading}
@@ -414,6 +462,7 @@ function App() {
         isOpen={showAddSpellModal}
         onClose={() => setShowAddSpellModal(false)}
         title="Add New Spell"
+        size="lg"
       >
         <SpellForm
           onSave={handleAddSpell}
@@ -429,6 +478,7 @@ function App() {
         isOpen={showEditSpellModal}
         onClose={() => setShowEditSpellModal(false)}
         title="Edit Spell"
+        size="lg"
       >
         <SpellForm
           onSave={handleEditSpell}
@@ -467,6 +517,19 @@ function App() {
           />
         </Modal>
       )}
+
+      {/* Import Spells Modal */}
+      <Modal
+        isOpen={showImportSpellModal}
+        onClose={() => setShowImportSpellModal(false)}
+        title="Import Spells"
+      >
+        <SpellImportModal
+          onImport={handleImportSpells}
+          onCancel={() => setShowImportSpellModal(false)}
+          loading={importLoading}
+        />
+      </Modal>
 
       {/* Notification Banner */}
       {notification && (

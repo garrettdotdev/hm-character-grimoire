@@ -136,6 +136,108 @@ app.delete('/api/spells/:id', async (req, res) => {
     }
 });
 
+// Spell import endpoint
+app.post('/api/spells/import', async (req, res) => {
+    try {
+        const { spells } = req.body;
+
+        if (!Array.isArray(spells)) {
+            return res.status(400).json({ error: 'Request body must contain a "spells" array' });
+        }
+
+        if (spells.length === 0) {
+            return res.status(400).json({ error: 'No spells provided for import' });
+        }
+
+        const validConvocations = ['Lyahvi', 'Peleahn', 'Jmorvi', 'Fyvria', 'Odivshe', 'Savorya', 'Neutral'];
+        const errors: string[] = [];
+        const validSpells: any[] = [];
+        const existingSpells = await dataStore.getAllSpells();
+        const existingSpellNames = new Set(existingSpells.map(s => s.name.toLowerCase()));
+
+        // Validate each spell
+        spells.forEach((spellData, index) => {
+            const spellErrors: string[] = [];
+
+            // Required field validation
+            if (!spellData.name || typeof spellData.name !== 'string' || !spellData.name.trim()) {
+                spellErrors.push('name is required');
+            } else if (existingSpellNames.has(spellData.name.toLowerCase())) {
+                spellErrors.push(`spell with name "${spellData.name}" already exists`);
+            }
+
+            if (!spellData.convocation || !validConvocations.includes(spellData.convocation)) {
+                spellErrors.push(`convocation must be one of: ${validConvocations.join(', ')}`);
+            }
+
+            if (!spellData.complexityLevel || typeof spellData.complexityLevel !== 'number' || spellData.complexityLevel < 1) {
+                spellErrors.push('complexityLevel must be a number >= 1');
+            }
+
+            if (!spellData.description || typeof spellData.description !== 'string' || !spellData.description.trim()) {
+                spellErrors.push('description is required');
+            }
+
+            // Optional field validation
+            if (spellData.bonusEffects && !Array.isArray(spellData.bonusEffects)) {
+                spellErrors.push('bonusEffects must be an array');
+            } else if (spellData.bonusEffects) {
+                spellData.bonusEffects.forEach((effect: any, effectIndex: number) => {
+                    if (!effect.masteryLevelMinimum || typeof effect.masteryLevelMinimum !== 'number') {
+                        spellErrors.push(`bonusEffects[${effectIndex}].masteryLevelMinimum must be a number`);
+                    }
+                    if (!effect.effectsDescription || typeof effect.effectsDescription !== 'string') {
+                        spellErrors.push(`bonusEffects[${effectIndex}].effectsDescription must be a string`);
+                    }
+                });
+            }
+
+            if (spellErrors.length > 0) {
+                errors.push(`Spell ${index + 1} (${spellData.name || 'unnamed'}): ${spellErrors.join(', ')}`);
+            } else {
+                // Create valid spell object
+                const spell = {
+                    id: crypto.randomUUID(),
+                    name: spellData.name.trim(),
+                    convocation: spellData.convocation,
+                    complexityLevel: parseInt(spellData.complexityLevel),
+                    description: spellData.description.trim(),
+                    bonusEffects: spellData.bonusEffects || [],
+                    castingTime: spellData.castingTime || '',
+                    range: spellData.range || '',
+                    duration: spellData.duration || '',
+                    folderPath: spellData.folderPath || '/',
+                    sourceBook: spellData.sourceBook || '',
+                    sourcePage: spellData.sourcePage || 0
+                };
+                validSpells.push(spell);
+            }
+        });
+
+        if (errors.length > 0) {
+            return res.status(400).json({
+                error: 'Validation failed',
+                details: errors,
+                validCount: validSpells.length,
+                totalCount: spells.length
+            });
+        }
+
+        // Import all valid spells
+        for (const spell of validSpells) {
+            await dataStore.addSpell(spell);
+        }
+
+        res.status(201).json({
+            message: `Successfully imported ${validSpells.length} spells`,
+            importedCount: validSpells.length
+        });
+    } catch (error) {
+        console.error('Import error:', error);
+        res.status(500).json({ error: 'Failed to import spells' });
+    }
+});
+
 // Folder management endpoints
 app.get('/api/folders', async (req, res) => {
     try {

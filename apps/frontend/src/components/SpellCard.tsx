@@ -1,4 +1,5 @@
 import type { Spell } from '../types'
+import { MarkdownRenderer } from './MarkdownRenderer'
 
 interface SpellCardProps {
   spell: Spell
@@ -42,7 +43,10 @@ export function SpellCard({ spell, size = 'medium', onRemove, onClick }: SpellCa
       {/* Remove button */}
       {onRemove && (
         <button
-          onClick={onRemove}
+          onClick={(e) => {
+            e.stopPropagation()
+            onRemove()
+          }}
           className="absolute top-2 right-2 w-6 h-6 bg-red-600 hover:bg-red-700 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
           title="Remove spell from character"
         >
@@ -62,9 +66,12 @@ export function SpellCard({ spell, size = 'medium', onRemove, onClick }: SpellCa
 
       {/* Description */}
       <div className="flex-1 overflow-hidden mb-2">
-        <p className={`${textClasses.description} text-gray-300 line-clamp-3`}>
-          {spell.description}
-        </p>
+        <MarkdownRenderer
+          content={spell.description}
+          className={`${textClasses.description} text-gray-300`}
+          truncate={true}
+          maxLines={3}
+        />
       </div>
 
       {/* Footer details */}

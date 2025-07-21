@@ -11,6 +11,7 @@ interface SpellSidebarProps {
   onAddSpell: () => void
   onEditSpell: () => void
   onDeleteSpell: () => void
+  onImportSpells: () => void
   onAddSpellToCharacter?: (spell: Spell) => void
   hasSelectedCharacter: boolean
   loading: boolean
@@ -25,6 +26,7 @@ export function SpellSidebar({
   onAddSpell,
   onEditSpell,
   onDeleteSpell,
+  onImportSpells,
   onAddSpellToCharacter,
   hasSelectedCharacter,
   loading,
@@ -159,28 +161,35 @@ export function SpellSidebar({
       <div className="p-4 border-b border-gray-700 flex justify-between items-center h-[76px]">
         <h2 className="text-xl font-semibold">Spells</h2>
         <div className="flex gap-2">
-          <button 
+          <button
             onClick={onAddSpell}
-            className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm transition-colors" 
+            className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm transition-colors"
             title="Add Spell"
           >
             +
           </button>
-          <button 
+          <button
             onClick={onEditSpell}
             disabled={!selectedSpell}
-            className="bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 text-white px-3 py-2 rounded text-sm transition-colors" 
+            className="bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 text-white px-3 py-2 rounded text-sm transition-colors"
             title={selectedSpell ? "Edit Spell" : "Select a spell to edit"}
           >
             ✏️
           </button>
-          <button 
+          <button
             onClick={onDeleteSpell}
             disabled={!selectedSpell}
-            className="bg-gray-700 hover:bg-red-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 text-white px-3 py-2 rounded text-sm transition-colors" 
+            className="bg-gray-700 hover:bg-red-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 text-white px-3 py-2 rounded text-sm transition-colors"
             title={selectedSpell ? "Delete Spell" : "Select a spell to delete"}
           >
             🗑️
+          </button>
+          <button
+            onClick={onImportSpells}
+            className="bg-blue-700 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm transition-colors"
+            title="Import Spells from JSON"
+          >
+            📥
           </button>
         </div>
       </div>
