@@ -20,6 +20,12 @@ importers:
 
   apps/backend:
     dependencies:
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../../packages/types
+      '@repo/validation':
+        specifier: workspace:*
+        version: link:../../packages/validation
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -32,6 +38,9 @@ importers:
       tsx:
         specifier: ^4.20.3
         version: 4.20.3
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
     devDependencies:
       '@types/cors':
         specifier: ^2.8.19
@@ -51,6 +60,12 @@ importers:
 
   apps/frontend:
     dependencies:
+      '@repo/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@tailwindcss/vite':
         specifier: ^4.1.11
         version: 4.1.11(vite@7.0.5(@types/node@22.15.3)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.20.3))
@@ -66,6 +81,9 @@ importers:
       tailwindcss:
         specifier: ^4.1.11
         version: 4.1.11
+      zustand:
+        specifier: ^5.0.2
+        version: 5.0.6(@types/react@19.1.8)(react@19.1.0)
     devDependencies:
       '@eslint/js':
         specifier: ^9.30.1
@@ -104,6 +122,19 @@ importers:
         specifier: ^7.0.4
         version: 7.0.5(@types/node@22.15.3)(jiti@2.4.2)(lightningcss@1.30.1)(tsx@4.20.3)
 
+  packages/api-client:
+    dependencies:
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../types
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
+
   packages/eslint-config:
     devDependencies:
       '@eslint/js':
@@ -140,6 +171,15 @@ importers:
         specifier: ^8.36.0
         version: 8.36.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.8.2)
 
+  packages/types:
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
+
   packages/typescript-config: {}
 
   packages/ui:
@@ -172,6 +212,22 @@ importers:
       typescript:
         specifier: 5.8.2
         version: 5.8.2
+
+  packages/validation:
+    dependencies:
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../types
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
 
 packages:
 
@@ -2583,6 +2639,27 @@ packages:
   yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
+
+  zod@3.25.76:
+    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
+
+  zustand@5.0.6:
+    resolution: {integrity: sha512-ihAqNeUVhe0MAD+X8M5UzqyZ9k3FFZLBTtqo6JLPwV53cbRB/mJwBI0PxcIgqhBBHlEs8G45OTDTMq3gNcLq3A==}
+    engines: {node: '>=12.20.0'}
+    peerDependencies:
+      '@types/react': '>=18.0.0'
+      immer: '>=9.0.6'
+      react: '>=18.0.0'
+      use-sync-external-store: '>=1.2.0'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      immer:
+        optional: true
+      react:
+        optional: true
+      use-sync-external-store:
+        optional: true
 
 snapshots:
 
@@ -5408,3 +5485,10 @@ snapshots:
   yallist@5.0.0: {}
 
   yocto-queue@0.1.0: {}
+
+  zod@3.25.76: {}
+
+  zustand@5.0.6(@types/react@19.1.8)(react@19.1.0):
+    optionalDependencies:
+      '@types/react': 19.1.8
+      react: 19.1.0

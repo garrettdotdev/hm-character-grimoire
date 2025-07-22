@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import type { Spell } from "../types";
+import type { Spell } from "@repo/types";
 import { FolderTreeNode } from "./FolderTreeNode";
 import { buildFolderTree, type FolderTreeState } from "../utils/folderTree";
 import { AddContextMenu } from "./AddContextMenu";

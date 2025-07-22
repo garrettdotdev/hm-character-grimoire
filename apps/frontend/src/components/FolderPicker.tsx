@@ -23,7 +23,13 @@ export function FolderPicker({
     .sort();
 
   // Add root folder
-  const folderOptions = ["/", ...uniqueFolders];
+  const allFolderOptions = ["/", ...uniqueFolders];
+
+  // Filter folders based on current input value
+  const filteredFolders = allFolderOptions.filter((folder) => {
+    if (!value || value === "/") return true; // Show all folders if no filter or just root
+    return folder.toLowerCase().includes(value.toLowerCase());
+  });
 
   const handleSelectFolder = (folderPath: string) => {
     onChange(folderPath);
@@ -73,7 +79,10 @@ export function FolderPicker({
           <input
             type="text"
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => {
+              onChange(e.target.value);
+              setShowDropdown(true); // Keep dropdown open while typing
+            }}
             onFocus={() => setShowDropdown(true)}
             className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
             placeholder="/ (root)"
@@ -83,16 +92,22 @@ export function FolderPicker({
           {/* Dropdown */}
           {showDropdown && !disabled && (
             <div className="absolute top-full left-0 right-0 mt-1 bg-gray-700 border border-gray-600 rounded shadow-lg z-10 max-h-48 overflow-y-auto">
-              {folderOptions.map((folder) => (
-                <button
-                  key={folder}
-                  type="button"
-                  onClick={() => handleSelectFolder(folder)}
-                  className="w-full text-left px-3 py-2 hover:bg-gray-600 text-white text-sm border-b border-gray-600 last:border-b-0"
-                >
-                  {folder === "/" ? "/ (root)" : folder}
-                </button>
-              ))}
+              {filteredFolders.length > 0 ? (
+                filteredFolders.map((folder) => (
+                  <button
+                    key={folder}
+                    type="button"
+                    onClick={() => handleSelectFolder(folder)}
+                    className="w-full text-left px-3 py-2 hover:bg-gray-600 text-white text-sm border-b border-gray-600 last:border-b-0"
+                  >
+                    {folder === "/" ? "/ (root)" : folder}
+                  </button>
+                ))
+              ) : (
+                <div className="px-3 py-2 text-gray-400 text-sm italic">
+                  No folders match "{value}"
+                </div>
+              )}
 
               {/* Create new folder option */}
               <button

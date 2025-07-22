@@ -1,27 +1,45 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
+import { useFormDirty } from "../hooks/useFormDirty";
 
 interface AddFolderModalProps {
   onSave: (folderPath: string) => Promise<void>;
   onCancel: () => void;
   loading?: boolean;
   allFolders: string[];
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
-export function AddFolderModal({
+export interface AddFolderModalRef {
+  save: () => Promise<void>;
+}
+
+export const AddFolderModal = forwardRef<AddFolderModalRef, AddFolderModalProps>(({
   onSave,
   onCancel,
   loading = false,
   allFolders,
-}: AddFolderModalProps) {
+  onDirtyChange,
+}, ref) => {
   const [folderPath, setFolderPath] = useState("");
   const [error, setError] = useState("");
+
+  // Dirty state tracking
+  const initialFormData = { folderPath: "" };
+  const { isDirty, updateData, markClean } = useFormDirty(initialFormData);
+
+  // Notify parent of dirty state changes
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   useEffect(() => {
     // Clear error when user starts typing
     if (error && folderPath) {
       setError("");
     }
-  }, [folderPath, error]);
+    // Update dirty state
+    updateData({ folderPath });
+  }, [folderPath, error, updateData]);
 
   const validateFolderPath = (path: string): string | null => {
     if (!path.trim()) {
@@ -59,13 +77,11 @@ export function AddFolderModal({
     return null;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const performSave = async () => {
     const validationError = validateFolderPath(folderPath);
     if (validationError) {
       setError(validationError);
-      return;
+      throw new Error(validationError);
     }
 
     let cleanPath = folderPath.trim();
@@ -82,11 +98,23 @@ export function AddFolderModal({
 
     try {
       await onSave(cleanPath);
+      markClean({ folderPath: cleanPath }); // Mark form as clean after successful save
     } catch (error) {
       console.error("Failed to create folder:", error);
       setError("Failed to create folder. Please try again.");
+      throw error;
     }
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await performSave();
+  };
+
+  // Expose save method to parent via ref
+  useImperativeHandle(ref, () => ({
+    save: performSave,
+  }));
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -170,4 +198,4 @@ export function AddFolderModal({
       </div>
     </form>
   );
-}
+});

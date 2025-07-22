@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { type Character, SpellConvocation, CharacterRank } from "../types";
+import { type Character, SpellConvocation, CharacterRank } from "@repo/types";
 import { useFormDirty } from "../hooks/useFormDirty";
 
 interface CharacterFormProps {
-  onSave: (character: Omit<Character, "id">) => Promise<void>;
+  onSave: (character: Omit<Character, "id" | "knownSpellIds">) => Promise<void>;
   onCancel: () => void;
   loading?: boolean;
-  initialData?: Omit<Character, "id">;
+  initialData?: Omit<Character, "id" | "knownSpellIds">;
   mode?: "create" | "edit";
   onDirtyChange?: (isDirty: boolean) => void;
 }

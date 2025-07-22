@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { Character } from "../types";
+import type { Character } from "@repo/types";
 
 interface DeleteCharacterDialogProps {
   character: Character;

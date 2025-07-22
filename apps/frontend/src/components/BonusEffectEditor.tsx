@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { BonusEffect } from "../types";
+import type { BonusEffect } from "@repo/types";
 
 interface BonusEffectEditorProps {
   bonusEffect: BonusEffect;

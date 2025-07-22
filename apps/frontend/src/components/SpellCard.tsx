@@ -1,4 +1,4 @@
-import type { Spell } from "../types";
+import type { Spell } from "@repo/types";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 
 interface SpellCardProps {

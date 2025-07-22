@@ -2,12 +2,13 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "HarnMaster Grimoire API",
-  "main": "index.js",
+  "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch index.ts",
+    "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/server.js",
+    "check-types": "tsc --noEmit"
   },
   "keywords": [
     "harnmaster",
@@ -17,10 +18,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@repo/types": "workspace:*",
+    "@repo/validation": "workspace:*",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "sqlite3": "^5.1.7",
-    "tsx": "^4.20.3"
+    "tsx": "^4.20.3",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

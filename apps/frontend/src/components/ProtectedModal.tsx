@@ -10,6 +10,8 @@ interface ProtectedModalProps {
   isDirty?: boolean;
   confirmTitle?: string;
   confirmMessage?: string;
+  onSave?: () => Promise<void>;
+  canSave?: boolean;
 }
 
 export function ProtectedModal({
@@ -21,6 +23,8 @@ export function ProtectedModal({
   isDirty = false,
   confirmTitle,
   confirmMessage,
+  onSave,
+  canSave = false,
 }: ProtectedModalProps) {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
@@ -51,13 +55,26 @@ export function ProtectedModal({
     }
   };
 
-  const handleConfirmClose = () => {
+  const handleDiscardChanges = () => {
     setShowConfirmDialog(false);
     onClose();
   };
 
-  const handleCancelClose = () => {
+  const handleGoBack = () => {
     setShowConfirmDialog(false);
+  };
+
+  const handleSaveAndClose = async () => {
+    if (onSave) {
+      try {
+        await onSave();
+        setShowConfirmDialog(false);
+        onClose();
+      } catch (error) {
+        // Keep the dialog open if save fails
+        console.error("Save failed:", error);
+      }
+    }
   };
 
   const handleBackdropClick = () => {
@@ -125,10 +142,12 @@ export function ProtectedModal({
       {/* Confirmation Dialog */}
       <ConfirmCloseDialog
         isOpen={showConfirmDialog}
-        onConfirm={handleConfirmClose}
-        onCancel={handleCancelClose}
+        onDiscard={handleDiscardChanges}
+        onGoBack={handleGoBack}
+        onSaveAndClose={onSave ? handleSaveAndClose : undefined}
         title={confirmTitle}
         message={confirmMessage}
+        canSave={canSave && !!onSave}
       />
     </>
   );

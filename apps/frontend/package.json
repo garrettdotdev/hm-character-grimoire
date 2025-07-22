@@ -11,11 +11,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@repo/api-client": "workspace:*",
+    "@repo/types": "workspace:*",
     "@tailwindcss/vite": "^4.1.11",
     "marked": "^16.1.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "tailwindcss": "^4.1.11"
+    "tailwindcss": "^4.1.11",
+    "zustand": "^5.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",

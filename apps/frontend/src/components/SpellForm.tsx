@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { type BonusEffect, type Spell, SpellConvocation } from "../types";
+import { type BonusEffect, type Spell, SpellConvocation } from "@repo/types";
 import { FolderPicker } from "./FolderPicker";
 import { RichTextEditor } from "./RichTextEditor";
 import { BonusEffectEditor } from "./BonusEffectEditor";

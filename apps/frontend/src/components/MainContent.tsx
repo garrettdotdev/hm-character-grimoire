@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { type Character, type Spell, SpellConvocation } from "../types";
+import { type Character, type Spell, SpellConvocation } from "@repo/types";
 import { SpellCard } from "./SpellCard";
 import { SpellDetailsModal } from "./SpellDetailsModal.tsx";
 
@@ -99,6 +99,10 @@ export function MainContent({
         if (sortBy === "name") {
           return a.name.localeCompare(b.name);
         } else {
+          // First compare by complexity level
+          const complexityDiff = a.complexityLevel - b.complexityLevel;
+          if (complexityDiff !== 0) return complexityDiff;
+          // If complexity is equal, sort by name
           return a.complexityLevel - b.complexityLevel;
         }
       });

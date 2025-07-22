@@ -1,4 +1,4 @@
-import type { Character } from "../types";
+import type { Character } from "@repo/types";
 
 interface SidebarProps {
   characters: Character[];

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Spell } from "../types";
+import type { Spell } from "@repo/types";
 import type { FolderNode } from "../utils/folderTree";
 
 interface FolderTreeNodeProps {

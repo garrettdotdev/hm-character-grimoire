@@ -1,4 +1,4 @@
-import type { Spell } from "../types";
+import type { Spell } from "@repo/types";
 
 export interface FolderNode {
   name: string;

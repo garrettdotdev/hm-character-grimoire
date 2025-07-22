@@ -1,20 +1,37 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useFormDirty } from "../hooks/useFormDirty";
 
 interface SpellImportModalProps {
   onImport: (spells: any[]) => Promise<void>;
   onCancel: () => void;
   loading?: boolean;
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
 export function SpellImportModal({
   onImport,
   onCancel,
   loading = false,
+  onDirtyChange,
 }: SpellImportModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [previewData, setPreviewData] = useState<any[] | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Dirty state tracking
+  const initialFormData = { selectedFile: null, previewData: null };
+  const { isDirty, updateData, markClean } = useFormDirty(initialFormData);
+
+  // Notify parent of dirty state changes
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
+
+  // Update dirty state when file or preview data changes
+  useEffect(() => {
+    updateData({ selectedFile, previewData });
+  }, [selectedFile, previewData, updateData]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -73,6 +90,7 @@ export function SpellImportModal({
 
     try {
       await onImport(previewData);
+      markClean({ selectedFile: null, previewData: null }); // Mark form as clean after successful import
     } catch (error) {
       console.error("Import failed:", error);
       setError("Import failed. Please check the file format and try again.");

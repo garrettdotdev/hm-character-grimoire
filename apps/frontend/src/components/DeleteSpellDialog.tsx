@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { Spell } from "../types";
+import type { Spell } from "@repo/types";
 
 interface DeleteSpellDialogProps {
   spell: Spell;

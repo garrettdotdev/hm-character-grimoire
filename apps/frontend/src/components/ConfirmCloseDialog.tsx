@@ -1,17 +1,21 @@
 interface ConfirmCloseDialogProps {
   isOpen: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
+  onDiscard: () => void;
+  onGoBack: () => void;
+  onSaveAndClose?: () => void;
   title?: string;
   message?: string;
+  canSave?: boolean;
 }
 
 export function ConfirmCloseDialog({
   isOpen,
-  onConfirm,
-  onCancel,
+  onDiscard,
+  onGoBack,
+  onSaveAndClose,
   title = "Unsaved Changes",
   message = "You have unsaved changes that will be lost if you close this dialog.",
+  canSave = false,
 }: ConfirmCloseDialogProps) {
   if (!isOpen) return null;
 
@@ -47,7 +51,7 @@ export function ConfirmCloseDialog({
             <div className="flex-1">
               <p className="text-gray-300 text-sm leading-relaxed">{message}</p>
               <p className="text-gray-400 text-xs mt-2">
-                Are you sure you want to continue?
+                What would you like to do?
               </p>
             </div>
           </div>
@@ -56,13 +60,21 @@ export function ConfirmCloseDialog({
         {/* Actions */}
         <div className="px-6 py-4 border-t border-gray-700 flex justify-end gap-3">
           <button
-            onClick={onCancel}
-            className="px-4 py-2 text-gray-300 hover:text-white transition-colors text-sm"
+            onClick={onGoBack}
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm transition-colors"
           >
-            Cancel
+            Go Back
           </button>
+          {canSave && onSaveAndClose && (
+            <button
+              onClick={onSaveAndClose}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors"
+            >
+              Save and Close
+            </button>
+          )}
           <button
-            onClick={onConfirm}
+            onClick={onDiscard}
             className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors"
           >
             Discard Changes
