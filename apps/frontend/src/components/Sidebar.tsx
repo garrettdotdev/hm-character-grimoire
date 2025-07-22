@@ -83,7 +83,7 @@ export function Sidebar({
               >
                 <div className="font-medium">{character.name}</div>
                 <div className="text-sm text-gray-400">
-                  {character.convocations.join(", ")} • {character.rank}
+                  {character.rank} • {character.convocations.join(", ")}
                 </div>
                 {character.game && (
                   <div className="text-xs text-gray-500">{character.game}</div>
