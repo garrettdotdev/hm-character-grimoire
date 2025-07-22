@@ -255,7 +255,7 @@ export function MainContent({
                 </div>
 
                 {/* Spell Cards Grid */}
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(256px,1fr))] gap-4">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
                   {spells.map((spell) => (
                     <SpellCard
                       key={spell.id}

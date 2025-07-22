@@ -15,9 +15,9 @@ export function SpellCard({
   onClick,
 }: SpellCardProps) {
   const sizeClasses = {
-    small: "w-48 h-32",
-    medium: "w-64 h-40",
-    large: "w-80 h-48",
+    small: "w-full h-40 min-w-[192px] max-w-[320px]",
+    medium: "w-full h-48 min-w-[224px] max-w-[400px]",
+    large: "w-full h-56 min-w-[256px] max-w-[480px]",
   };
 
   const textSizeClasses = {
@@ -80,7 +80,7 @@ export function SpellCard({
           content={spell.description}
           className={`${textClasses.description} text-gray-300`}
           truncate={true}
-          maxLines={3}
+          maxLines={2}
         />
       </div>
 
