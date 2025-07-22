@@ -1,92 +1,92 @@
-import { useState, useRef } from 'react'
+import { useState, useRef } from "react";
 
 interface SpellImportModalProps {
-  onImport: (spells: any[]) => Promise<void>
-  onCancel: () => void
-  loading?: boolean
+  onImport: (spells: any[]) => Promise<void>;
+  onCancel: () => void;
+  loading?: boolean;
 }
 
 export function SpellImportModal({
   onImport,
   onCancel,
-  loading = false
+  loading = false,
 }: SpellImportModalProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [error, setError] = useState('')
-  const [previewData, setPreviewData] = useState<any[] | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [error, setError] = useState("");
+  const [previewData, setPreviewData] = useState<any[] | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+    const file = event.target.files?.[0];
     if (!file) {
-      setSelectedFile(null)
-      setPreviewData(null)
-      setError('')
-      return
+      setSelectedFile(null);
+      setPreviewData(null);
+      setError("");
+      return;
     }
 
-    if (file.type !== 'application/json') {
-      setError('Please select a JSON file')
-      setSelectedFile(null)
-      setPreviewData(null)
-      return
+    if (file.type !== "application/json") {
+      setError("Please select a JSON file");
+      setSelectedFile(null);
+      setPreviewData(null);
+      return;
     }
 
-    setSelectedFile(file)
-    setError('')
+    setSelectedFile(file);
+    setError("");
 
     // Read and preview the file
-    const reader = new FileReader()
+    const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const content = e.target?.result as string
-        const data = JSON.parse(content)
-        
+        const content = e.target?.result as string;
+        const data = JSON.parse(content);
+
         // Validate basic structure
         if (!Array.isArray(data)) {
-          setError('JSON file must contain an array of spells')
-          setPreviewData(null)
-          return
+          setError("JSON file must contain an array of spells");
+          setPreviewData(null);
+          return;
         }
 
         if (data.length === 0) {
-          setError('JSON file contains no spells')
-          setPreviewData(null)
-          return
+          setError("JSON file contains no spells");
+          setPreviewData(null);
+          return;
         }
 
-        setPreviewData(data)
-        setError('')
+        setPreviewData(data);
+        setError("");
       } catch (parseError) {
-        setError('Invalid JSON file format')
-        setPreviewData(null)
+        setError("Invalid JSON file format");
+        setPreviewData(null);
       }
-    }
-    reader.readAsText(file)
-  }
+    };
+    reader.readAsText(file);
+  };
 
   const handleImport = async () => {
     if (!previewData) {
-      setError('No valid data to import')
-      return
+      setError("No valid data to import");
+      return;
     }
 
     try {
-      await onImport(previewData)
+      await onImport(previewData);
     } catch (error) {
-      console.error('Import failed:', error)
-      setError('Import failed. Please check the file format and try again.')
+      console.error("Import failed:", error);
+      setError("Import failed. Please check the file format and try again.");
     }
-  }
+  };
 
   const clearFile = () => {
-    setSelectedFile(null)
-    setPreviewData(null)
-    setError('')
+    setSelectedFile(null);
+    setPreviewData(null);
+    setError("");
     if (fileInputRef.current) {
-      fileInputRef.current.value = ''
+      fileInputRef.current.value = "";
     }
-  }
+  };
 
   return (
     <div className="space-y-4">
@@ -143,9 +143,12 @@ export function SpellImportModal({
           </h4>
           <div className="max-h-40 overflow-y-auto space-y-1">
             {previewData.slice(0, 10).map((spell, index) => (
-              <div key={index} className="text-xs text-gray-400 flex justify-between">
-                <span>{spell.name || 'Unnamed'}</span>
-                <span>{spell.convocation || 'No convocation'}</span>
+              <div
+                key={index}
+                className="text-xs text-gray-400 flex justify-between"
+              >
+                <span>{spell.name || "Unnamed"}</span>
+                <span>{spell.convocation || "No convocation"}</span>
               </div>
             ))}
             {previewData.length > 10 && (
@@ -159,9 +162,11 @@ export function SpellImportModal({
 
       {/* Expected Format Info */}
       <div className="bg-gray-800 border border-gray-700 rounded p-3">
-        <h4 className="text-sm font-medium text-gray-300 mb-2">Expected JSON Format</h4>
+        <h4 className="text-sm font-medium text-gray-300 mb-2">
+          Expected JSON Format
+        </h4>
         <pre className="text-xs text-gray-400 overflow-x-auto">
-{`[
+          {`[
   {
     "name": "Spell Name",
     "convocation": "Lyahvi",
@@ -203,9 +208,9 @@ export function SpellImportModal({
           disabled={loading || !previewData}
           className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded text-sm transition-colors"
         >
-          {loading ? 'Importing...' : 'Import Spells'}
+          {loading ? "Importing..." : "Import Spells"}
         </button>
       </div>
     </div>
-  )
+  );
 }

@@ -1,70 +1,75 @@
-import { useState, useEffect, useMemo } from 'react'
-import { Sidebar } from './components/Sidebar'
-import { MainContent } from './components/MainContent'
-import { SpellSidebar } from './components/SpellSidebar'
-import { Modal } from './components/Modal'
-import { ProtectedModal } from './components/ProtectedModal'
-import { CharacterForm } from './components/AddCharacterForm'
-import { DeleteCharacterDialog } from './components/DeleteCharacterDialog'
-import { SpellForm } from './components/SpellForm'
-import { DeleteSpellDialog } from './components/DeleteSpellDialog'
-import { SpellImportModal } from './components/SpellImportModal'
-import { AddFolderModal } from './components/AddFolderModal'
-import { NotificationBanner } from './components/NotificationBanner'
-import type { Character, Spell } from './types'
-import './App.css'
+import { useState, useEffect, useMemo } from "react";
+import { Sidebar } from "./components/Sidebar";
+import { MainContent } from "./components/MainContent";
+import { SpellSidebar } from "./components/SpellSidebar";
+import { Modal } from "./components/Modal";
+import { ProtectedModal } from "./components/ProtectedModal";
+import { CharacterForm } from "./components/AddCharacterForm";
+import { DeleteCharacterDialog } from "./components/DeleteCharacterDialog";
+import { SpellForm } from "./components/SpellForm";
+import { DeleteSpellDialog } from "./components/DeleteSpellDialog";
+import { SpellImportModal } from "./components/SpellImportModal";
+import { AddFolderModal } from "./components/AddFolderModal";
+import { NotificationBanner } from "./components/NotificationBanner";
+import type { Character, Spell } from "./types";
+import "./App.css";
 
 function App() {
-  const [characters, setCharacters] = useState<Character[]>([])
-  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null)
-  const [spells, setSpells] = useState<Spell[]>([])
-  const [selectedSpell, setSelectedSpell] = useState<Spell | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [spellsLoading, setSpellsLoading] = useState(false)
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [showAddSpellModal, setShowAddSpellModal] = useState(false)
-  const [showEditSpellModal, setShowEditSpellModal] = useState(false)
-  const [showDeleteSpellModal, setShowDeleteSpellModal] = useState(false)
-  const [showImportSpellModal, setShowImportSpellModal] = useState(false)
-  const [showAddFolderModal, setShowAddFolderModal] = useState(false)
-  const [characterFormLoading, setCharacterFormLoading] = useState(false)
-  const [spellFormLoading, setSpellFormLoading] = useState(false)
-  const [deleteLoading, setDeleteLoading] = useState(false)
-  const [deleteSpellLoading, setDeleteSpellLoading] = useState(false)
-  const [importLoading, setImportLoading] = useState(false)
-  const [folderFormLoading, setFolderFormLoading] = useState(false)
-  const [notification, setNotification] = useState<{ message: string; type: 'info' | 'warning' | 'error' | 'success' } | null>(null)
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(
+    null,
+  );
+  const [spells, setSpells] = useState<Spell[]>([]);
+  const [selectedSpell, setSelectedSpell] = useState<Spell | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [spellsLoading, setSpellsLoading] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showAddSpellModal, setShowAddSpellModal] = useState(false);
+  const [showEditSpellModal, setShowEditSpellModal] = useState(false);
+  const [showDeleteSpellModal, setShowDeleteSpellModal] = useState(false);
+  const [showImportSpellModal, setShowImportSpellModal] = useState(false);
+  const [showAddFolderModal, setShowAddFolderModal] = useState(false);
+  const [characterFormLoading, setCharacterFormLoading] = useState(false);
+  const [spellFormLoading, setSpellFormLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteSpellLoading, setDeleteSpellLoading] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
+  const [folderFormLoading, setFolderFormLoading] = useState(false);
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: "info" | "warning" | "error" | "success";
+  } | null>(null);
 
   // Dirty state tracking for forms
-  const [isCharacterFormDirty, setIsCharacterFormDirty] = useState(false)
-  const [isSpellFormDirty, setIsSpellFormDirty] = useState(false)
+  const [isCharacterFormDirty, setIsCharacterFormDirty] = useState(false);
+  const [isSpellFormDirty, setIsSpellFormDirty] = useState(false);
 
   // Reset dirty state when modals close
   const handleCloseAddCharacterModal = () => {
-    setShowAddModal(false)
-    setIsCharacterFormDirty(false)
-  }
+    setShowAddModal(false);
+    setIsCharacterFormDirty(false);
+  };
 
   const handleCloseEditCharacterModal = () => {
-    setShowEditModal(false)
-    setIsCharacterFormDirty(false)
-  }
+    setShowEditModal(false);
+    setIsCharacterFormDirty(false);
+  };
 
   const handleCloseAddSpellModal = () => {
-    setShowAddSpellModal(false)
-    setIsSpellFormDirty(false)
-  }
+    setShowAddSpellModal(false);
+    setIsSpellFormDirty(false);
+  };
 
   const handleCloseEditSpellModal = () => {
-    setShowEditSpellModal(false)
-    setIsSpellFormDirty(false)
-  }
+    setShowEditSpellModal(false);
+    setIsSpellFormDirty(false);
+  };
 
   // Memoize initial data to prevent unnecessary re-renders
   const editSpellInitialData = useMemo(() => {
-    if (!selectedSpell) return undefined
+    if (!selectedSpell) return undefined;
     return {
       name: selectedSpell.name,
       convocation: selectedSpell.convocation,
@@ -76,390 +81,410 @@ function App() {
       duration: selectedSpell.duration,
       folderPath: selectedSpell.folderPath,
       sourceBook: selectedSpell.sourceBook,
-      sourcePage: selectedSpell.sourcePage
-    }
-  }, [selectedSpell])
+      sourcePage: selectedSpell.sourcePage,
+    };
+  }, [selectedSpell]);
 
   const editCharacterInitialData = useMemo(() => {
-    if (!selectedCharacter) return undefined
+    if (!selectedCharacter) return undefined;
     return {
       name: selectedCharacter.name,
       convocations: selectedCharacter.convocations,
       rank: selectedCharacter.rank,
-      game: selectedCharacter.game
-    }
-  }, [selectedCharacter])
-  const [grimoireRefreshTrigger, setGrimoireRefreshTrigger] = useState(0)
+      game: selectedCharacter.game,
+    };
+  }, [selectedCharacter]);
+  const [grimoireRefreshTrigger, setGrimoireRefreshTrigger] = useState(0);
 
   useEffect(() => {
-    fetchCharacters()
-    fetchSpells()
-  }, [])
+    fetchCharacters();
+    fetchSpells();
+  }, []);
 
   const fetchCharacters = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const response = await fetch('/api/characters')
-      const data = await response.json()
-      setCharacters(data.characters || [])
+      const response = await fetch("/api/characters");
+      const data = await response.json();
+      setCharacters(data.characters || []);
     } catch (error) {
-      console.error('Failed to fetch characters:', error)
-      setCharacters([])
+      console.error("Failed to fetch characters:", error);
+      setCharacters([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const fetchSpells = async () => {
-    setSpellsLoading(true)
+    setSpellsLoading(true);
     try {
-      const response = await fetch('/api/spells')
-      const data = await response.json()
-      setSpells(data.spells || [])
+      const response = await fetch("/api/spells");
+      const data = await response.json();
+      setSpells(data.spells || []);
     } catch (error) {
-      console.error('Failed to fetch spells:', error)
-      setSpells([])
+      console.error("Failed to fetch spells:", error);
+      setSpells([]);
     } finally {
-      setSpellsLoading(false)
+      setSpellsLoading(false);
     }
-  }
+  };
 
-  const handleAddCharacter = async (characterData: Omit<Character, 'id'>) => {
-    setCharacterFormLoading(true)
+  const handleAddCharacter = async (characterData: Omit<Character, "id">) => {
+    setCharacterFormLoading(true);
     try {
-      const response = await fetch('/api/characters', {
-        method: 'POST',
+      const response = await fetch("/api/characters", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(characterData),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to create character')
+        throw new Error("Failed to create character");
       }
 
-      const newCharacter = await response.json()
-      setCharacters(prev => [...prev, newCharacter])
-      setShowAddModal(false)
-      setSelectedCharacter(newCharacter)
+      const newCharacter = await response.json();
+      setCharacters((prev) => [...prev, newCharacter]);
+      setShowAddModal(false);
+      setSelectedCharacter(newCharacter);
     } catch (error) {
-      console.error('Failed to create character:', error)
-      throw error
+      console.error("Failed to create character:", error);
+      throw error;
     } finally {
-      setCharacterFormLoading(false)
+      setCharacterFormLoading(false);
     }
-  }
+  };
 
-  const handleEditCharacter = async (characterData: Omit<Character, 'id'>) => {
-    if (!selectedCharacter) return
+  const handleEditCharacter = async (characterData: Omit<Character, "id">) => {
+    if (!selectedCharacter) return;
 
-    setCharacterFormLoading(true)
+    setCharacterFormLoading(true);
     try {
       const response = await fetch(`/api/characters/${selectedCharacter.id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(characterData),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to update character')
+        throw new Error("Failed to update character");
       }
 
-      const updatedCharacter = await response.json()
-      setCharacters(prev => prev.map(char =>
-        char.id === updatedCharacter.id ? updatedCharacter : char
-      ))
-      setShowEditModal(false)
-      setSelectedCharacter(updatedCharacter)
+      const updatedCharacter = await response.json();
+      setCharacters((prev) =>
+        prev.map((char) =>
+          char.id === updatedCharacter.id ? updatedCharacter : char,
+        ),
+      );
+      setShowEditModal(false);
+      setSelectedCharacter(updatedCharacter);
     } catch (error) {
-      console.error('Failed to update character:', error)
-      throw error
+      console.error("Failed to update character:", error);
+      throw error;
     } finally {
-      setCharacterFormLoading(false)
+      setCharacterFormLoading(false);
     }
-  }
+  };
 
   const handleDeleteCharacter = async () => {
-    if (!selectedCharacter) return
+    if (!selectedCharacter) return;
 
-    setDeleteLoading(true)
+    setDeleteLoading(true);
     try {
       const response = await fetch(`/api/characters/${selectedCharacter.id}`, {
-        method: 'DELETE',
-      })
+        method: "DELETE",
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to delete character')
+        throw new Error("Failed to delete character");
       }
 
-      setCharacters(prev => prev.filter(char => char.id !== selectedCharacter.id))
-      setShowDeleteModal(false)
-      setSelectedCharacter(null)
+      setCharacters((prev) =>
+        prev.filter((char) => char.id !== selectedCharacter.id),
+      );
+      setShowDeleteModal(false);
+      setSelectedCharacter(null);
     } catch (error) {
-      console.error('Failed to delete character:', error)
-      throw error
+      console.error("Failed to delete character:", error);
+      throw error;
     } finally {
-      setDeleteLoading(false)
+      setDeleteLoading(false);
     }
-  }
+  };
 
-  const handleAddSpell = async (spellData: Omit<Spell, 'id'>) => {
-    setSpellFormLoading(true)
+  const handleAddSpell = async (spellData: Omit<Spell, "id">) => {
+    setSpellFormLoading(true);
     try {
-      const response = await fetch('/api/spells', {
-        method: 'POST',
+      const response = await fetch("/api/spells", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(spellData),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to create spell')
+        throw new Error("Failed to create spell");
       }
 
-      const newSpell = await response.json()
-      setSpells(prev => [...prev, newSpell])
-      setShowAddSpellModal(false)
-      setSelectedSpell(newSpell)
+      const newSpell = await response.json();
+      setSpells((prev) => [...prev, newSpell]);
+      setShowAddSpellModal(false);
+      setSelectedSpell(newSpell);
     } catch (error) {
-      console.error('Failed to create spell:', error)
-      throw error
+      console.error("Failed to create spell:", error);
+      throw error;
     } finally {
-      setSpellFormLoading(false)
+      setSpellFormLoading(false);
     }
-  }
+  };
 
-  const handleEditSpell = async (spellData: Omit<Spell, 'id'>) => {
-    if (!selectedSpell) return
+  const handleEditSpell = async (spellData: Omit<Spell, "id">) => {
+    if (!selectedSpell) return;
 
-    setSpellFormLoading(true)
+    setSpellFormLoading(true);
     try {
       const response = await fetch(`/api/spells/${selectedSpell.id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(spellData),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to update spell')
+        throw new Error("Failed to update spell");
       }
 
-      const updatedSpell = await response.json()
-      setSpells(prev => prev.map(spell =>
-        spell.id === updatedSpell.id ? updatedSpell : spell
-      ))
-      setShowEditSpellModal(false)
-      setSelectedSpell(updatedSpell)
+      const updatedSpell = await response.json();
+      setSpells((prev) =>
+        prev.map((spell) =>
+          spell.id === updatedSpell.id ? updatedSpell : spell,
+        ),
+      );
+      setShowEditSpellModal(false);
+      setSelectedSpell(updatedSpell);
     } catch (error) {
-      console.error('Failed to update spell:', error)
-      throw error
+      console.error("Failed to update spell:", error);
+      throw error;
     } finally {
-      setSpellFormLoading(false)
+      setSpellFormLoading(false);
     }
-  }
+  };
 
   const handleDeleteSpell = async () => {
-    if (!selectedSpell) return
+    if (!selectedSpell) return;
 
-    setDeleteSpellLoading(true)
+    setDeleteSpellLoading(true);
     try {
       const response = await fetch(`/api/spells/${selectedSpell.id}`, {
-        method: 'DELETE',
-      })
+        method: "DELETE",
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to delete spell')
+        throw new Error("Failed to delete spell");
       }
 
-      setSpells(prev => prev.filter(spell => spell.id !== selectedSpell.id))
-      setShowDeleteSpellModal(false)
-      setSelectedSpell(null)
+      setSpells((prev) =>
+        prev.filter((spell) => spell.id !== selectedSpell.id),
+      );
+      setShowDeleteSpellModal(false);
+      setSelectedSpell(null);
     } catch (error) {
-      console.error('Failed to delete spell:', error)
-      throw error
+      console.error("Failed to delete spell:", error);
+      throw error;
     } finally {
-      setDeleteSpellLoading(false)
+      setDeleteSpellLoading(false);
     }
-  }
+  };
 
   const handleImportSpells = async (spellsData: any[]) => {
-    setImportLoading(true)
+    setImportLoading(true);
     try {
-      const response = await fetch('/api/spells/import', {
-        method: 'POST',
+      const response = await fetch("/api/spells/import", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ spells: spellsData }),
-      })
+      });
 
-      const result = await response.json()
+      const result = await response.json();
 
       if (!response.ok) {
         // Handle validation errors
         if (result.details && Array.isArray(result.details)) {
-          const errorMessage = `Import failed:\n${result.details.slice(0, 5).join('\n')}${
-            result.details.length > 5 ? `\n... and ${result.details.length - 5} more errors` : ''
-          }`
-          setNotification({ message: errorMessage, type: 'error' })
+          const errorMessage = `Import failed:\n${result.details.slice(0, 5).join("\n")}${
+            result.details.length > 5
+              ? `\n... and ${result.details.length - 5} more errors`
+              : ""
+          }`;
+          setNotification({ message: errorMessage, type: "error" });
         } else {
-          setNotification({ message: result.error || 'Import failed', type: 'error' })
+          setNotification({
+            message: result.error || "Import failed",
+            type: "error",
+          });
         }
-        throw new Error(result.error || 'Import failed')
+        throw new Error(result.error || "Import failed");
       }
 
       // Success
       setNotification({
         message: `Successfully imported ${result.importedCount} spells`,
-        type: 'success'
-      })
-      setShowImportSpellModal(false)
-      await fetchSpells() // Refresh the spell list
+        type: "success",
+      });
+      setShowImportSpellModal(false);
+      await fetchSpells(); // Refresh the spell list
     } catch (error) {
-      console.error('Failed to import spells:', error)
-      if (!notification) { // Only show generic error if we haven't already shown a specific one
-        setNotification({ message: 'Failed to import spells', type: 'error' })
+      console.error("Failed to import spells:", error);
+      if (!notification) {
+        // Only show generic error if we haven't already shown a specific one
+        setNotification({ message: "Failed to import spells", type: "error" });
       }
-      throw error
+      throw error;
     } finally {
-      setImportLoading(false)
+      setImportLoading(false);
     }
-  }
+  };
 
   const handleCreateFolder = async (folderPath: string) => {
-    setFolderFormLoading(true)
+    setFolderFormLoading(true);
     try {
-      const response = await fetch('/api/folders', {
-        method: 'POST',
+      const response = await fetch("/api/folders", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ folderPath }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to create folder')
+        throw new Error("Failed to create folder");
       }
 
       setNotification({
         message: `Successfully created folder: ${folderPath}`,
-        type: 'success'
-      })
-      setShowAddFolderModal(false)
-      await fetchSpells() // Refresh the spell list to pick up the new folder
+        type: "success",
+      });
+      setShowAddFolderModal(false);
+      await fetchSpells(); // Refresh the spell list to pick up the new folder
     } catch (error) {
-      console.error('Failed to create folder:', error)
-      setNotification({ message: 'Failed to create folder', type: 'error' })
-      throw error
+      console.error("Failed to create folder:", error);
+      setNotification({ message: "Failed to create folder", type: "error" });
+      throw error;
     } finally {
-      setFolderFormLoading(false)
+      setFolderFormLoading(false);
     }
-  }
+  };
 
   const handleUpdateSpell = async (updatedSpell: Spell) => {
     try {
       const response = await fetch(`/api/spells/${updatedSpell.id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(updatedSpell),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to update spell')
+        throw new Error("Failed to update spell");
       }
 
-      const result = await response.json()
-      setSpells(prev => prev.map(spell =>
-        spell.id === result.id ? result : spell
-      ))
+      const result = await response.json();
+      setSpells((prev) =>
+        prev.map((spell) => (spell.id === result.id ? result : spell)),
+      );
 
       if (selectedSpell?.id === result.id) {
-        setSelectedSpell(result)
+        setSelectedSpell(result);
       }
     } catch (error) {
-      console.error('Failed to update spell:', error)
+      console.error("Failed to update spell:", error);
       setNotification({
-        message: 'Failed to update spell',
-        type: 'error'
-      })
+        message: "Failed to update spell",
+        type: "error",
+      });
     }
-  }
+  };
 
   const handleAddSpellToCharacter = async (spellId: string) => {
-    if (!selectedCharacter) return
+    if (!selectedCharacter) return;
 
     try {
-      const response = await fetch(`/api/characters/${selectedCharacter.id}/spells`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `/api/characters/${selectedCharacter.id}/spells`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ spellId }),
         },
-        body: JSON.stringify({ spellId }),
-      })
+      );
 
       if (response.status === 409) {
         setNotification({
           message: `${selectedCharacter.name} already knows this spell!`,
-          type: 'warning'
-        })
-        return
+          type: "warning",
+        });
+        return;
       }
 
       if (!response.ok) {
-        throw new Error('Failed to add spell to character')
+        throw new Error("Failed to add spell to character");
       }
 
       // Refresh character data and grimoire
-      fetchCharacters()
-      setGrimoireRefreshTrigger(prev => prev + 1)
+      fetchCharacters();
+      setGrimoireRefreshTrigger((prev) => prev + 1);
       setNotification({
         message: `Spell added to ${selectedCharacter.name}'s grimoire!`,
-        type: 'success'
-      })
+        type: "success",
+      });
     } catch (error) {
-      console.error('Failed to add spell to character:', error)
+      console.error("Failed to add spell to character:", error);
       setNotification({
-        message: 'Failed to add spell to character',
-        type: 'error'
-      })
+        message: "Failed to add spell to character",
+        type: "error",
+      });
     }
-  }
+  };
 
   const handleRemoveSpellFromCharacter = async (spellId: string) => {
-    if (!selectedCharacter) return
+    if (!selectedCharacter) return;
 
     try {
-      const response = await fetch(`/api/characters/${selectedCharacter.id}/spells/${spellId}`, {
-        method: 'DELETE',
-      })
+      const response = await fetch(
+        `/api/characters/${selectedCharacter.id}/spells/${spellId}`,
+        {
+          method: "DELETE",
+        },
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to remove spell from character')
+        throw new Error("Failed to remove spell from character");
       }
 
       // Refresh character data and grimoire
-      fetchCharacters()
-      setGrimoireRefreshTrigger(prev => prev + 1)
+      fetchCharacters();
+      setGrimoireRefreshTrigger((prev) => prev + 1);
       setNotification({
         message: `Spell removed from ${selectedCharacter.name}'s grimoire`,
-        type: 'info'
-      })
+        type: "info",
+      });
     } catch (error) {
-      console.error('Failed to remove spell from character:', error)
+      console.error("Failed to remove spell from character:", error);
       setNotification({
-        message: 'Failed to remove spell from character',
-        type: 'error'
-      })
+        message: "Failed to remove spell from character",
+        type: "error",
+      });
     }
-  }
+  };
 
   return (
     <div className="flex h-screen bg-gray-900 text-white">
@@ -624,7 +649,9 @@ function App() {
           onSave={handleCreateFolder}
           onCancel={() => setShowAddFolderModal(false)}
           loading={folderFormLoading}
-          allFolders={spells.map(s => s.folderPath).filter((path, index, arr) => arr.indexOf(path) === index)}
+          allFolders={spells
+            .map((s) => s.folderPath)
+            .filter((path, index, arr) => arr.indexOf(path) === index)}
         />
       </Modal>
 
@@ -637,7 +664,7 @@ function App() {
         />
       )}
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

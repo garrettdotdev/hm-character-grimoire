@@ -1,52 +1,54 @@
-import { marked } from 'marked'
-import { useMemo } from 'react'
+import { marked } from "marked";
+import { useMemo } from "react";
 
 interface MarkdownRendererProps {
-  content: string
-  className?: string
-  truncate?: boolean
-  maxLines?: number
+  content: string;
+  className?: string;
+  truncate?: boolean;
+  maxLines?: number;
 }
 
-export function MarkdownRenderer({ 
-  content, 
-  className = '', 
-  truncate = false, 
-  maxLines = 3 
+export function MarkdownRenderer({
+  content,
+  className = "",
+  truncate = false,
+  maxLines = 3,
 }: MarkdownRendererProps) {
   const htmlContent = useMemo(() => {
-    if (!content) return ''
-    
+    if (!content) return "";
+
     // Configure marked for safe rendering
     marked.setOptions({
       breaks: true,
       gfm: true,
-    })
-    
-    try {
-      return marked(content)
-    } catch (error) {
-      console.error('Error parsing markdown:', error)
-      return content // Fallback to plain text
-    }
-  }, [content])
+    });
 
-  const truncateClass = truncate ? `line-clamp-${maxLines}` : ''
+    try {
+      return marked(content);
+    } catch (error) {
+      console.error("Error parsing markdown:", error);
+      return content; // Fallback to plain text
+    }
+  }, [content]);
+
+  const truncateClass = truncate ? `line-clamp-${maxLines}` : "";
 
   return (
-    <div 
+    <div
       className={`markdown-content ${className} ${truncateClass}`}
       dangerouslySetInnerHTML={{ __html: htmlContent }}
-      style={{
-        // Custom styles for markdown content in dark theme
-        '--markdown-color': 'rgb(209, 213, 219)',
-        '--markdown-heading-color': 'white',
-        '--markdown-strong-color': 'white',
-        '--markdown-code-bg': 'rgb(31, 41, 55)',
-        '--markdown-code-color': 'rgb(96, 165, 250)',
-      } as React.CSSProperties}
+      style={
+        {
+          // Custom styles for markdown content in dark theme
+          "--markdown-color": "rgb(209, 213, 219)",
+          "--markdown-heading-color": "white",
+          "--markdown-strong-color": "white",
+          "--markdown-code-bg": "rgb(31, 41, 55)",
+          "--markdown-code-color": "rgb(96, 165, 250)",
+        } as React.CSSProperties
+      }
     />
-  )
+  );
 }
 
 // Add global styles for markdown content
@@ -167,11 +169,11 @@ const markdownStyles = `
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-`
+`;
 
 // Inject styles into the document head
-if (typeof document !== 'undefined') {
-  const styleElement = document.createElement('style')
-  styleElement.textContent = markdownStyles
-  document.head.appendChild(styleElement)
+if (typeof document !== "undefined") {
+  const styleElement = document.createElement("style");
+  styleElement.textContent = markdownStyles;
+  document.head.appendChild(styleElement);
 }

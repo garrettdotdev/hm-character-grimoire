@@ -1,68 +1,73 @@
-import { useState, useEffect } from 'react'
+import { useState } from "react";
 
 interface FolderPickerProps {
-  value: string
-  onChange: (folderPath: string) => void
-  disabled?: boolean
-  allFolders: string[] // All existing folder paths
+  value: string;
+  onChange: (folderPath: string) => void;
+  disabled?: boolean;
+  allFolders: string[]; // All existing folder paths
 }
 
-export function FolderPicker({ value, onChange, disabled = false, allFolders }: FolderPickerProps) {
-  const [isCreatingNew, setIsCreatingNew] = useState(false)
-  const [newFolderPath, setNewFolderPath] = useState('')
-  const [showDropdown, setShowDropdown] = useState(false)
+export function FolderPicker({
+  value,
+  onChange,
+  disabled = false,
+  allFolders,
+}: FolderPickerProps) {
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const [newFolderPath, setNewFolderPath] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
 
   // Get unique folder paths and sort them
   const uniqueFolders = Array.from(new Set(allFolders))
-    .filter(path => path !== '/')
-    .sort()
+    .filter((path) => path !== "/")
+    .sort();
 
   // Add root folder
-  const folderOptions = ['/', ...uniqueFolders]
+  const folderOptions = ["/", ...uniqueFolders];
 
   const handleSelectFolder = (folderPath: string) => {
-    onChange(folderPath)
-    setShowDropdown(false)
-    setIsCreatingNew(false)
-  }
+    onChange(folderPath);
+    setShowDropdown(false);
+    setIsCreatingNew(false);
+  };
 
   const handleCreateNew = () => {
     if (newFolderPath.trim()) {
-      let cleanPath = newFolderPath.trim()
-      
+      let cleanPath = newFolderPath.trim();
+
       // Ensure it starts with /
-      if (!cleanPath.startsWith('/')) {
-        cleanPath = '/' + cleanPath
+      if (!cleanPath.startsWith("/")) {
+        cleanPath = "/" + cleanPath;
       }
-      
+
       // Remove trailing slash unless it's root
-      if (cleanPath !== '/' && cleanPath.endsWith('/')) {
-        cleanPath = cleanPath.slice(0, -1)
+      if (cleanPath !== "/" && cleanPath.endsWith("/")) {
+        cleanPath = cleanPath.slice(0, -1);
       }
-      
-      onChange(cleanPath)
-      setNewFolderPath('')
-      setIsCreatingNew(false)
-      setShowDropdown(false)
+
+      onChange(cleanPath);
+      setNewFolderPath("");
+      setIsCreatingNew(false);
+      setShowDropdown(false);
     }
-  }
+  };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      handleCreateNew()
-    } else if (e.key === 'Escape') {
-      setIsCreatingNew(false)
-      setNewFolderPath('')
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleCreateNew();
+    } else if (e.key === "Escape") {
+      setIsCreatingNew(false);
+      setNewFolderPath("");
     }
-  }
+  };
 
   return (
     <div className="relative">
       <label className="block text-sm font-medium text-gray-300 mb-1">
         Folder Path
       </label>
-      
+
       <div className="flex gap-2">
         <div className="flex-1 relative">
           <input
@@ -74,21 +79,21 @@ export function FolderPicker({ value, onChange, disabled = false, allFolders }: 
             placeholder="/ (root)"
             disabled={disabled}
           />
-          
+
           {/* Dropdown */}
           {showDropdown && !disabled && (
             <div className="absolute top-full left-0 right-0 mt-1 bg-gray-700 border border-gray-600 rounded shadow-lg z-10 max-h-48 overflow-y-auto">
-              {folderOptions.map(folder => (
+              {folderOptions.map((folder) => (
                 <button
                   key={folder}
                   type="button"
                   onClick={() => handleSelectFolder(folder)}
                   className="w-full text-left px-3 py-2 hover:bg-gray-600 text-white text-sm border-b border-gray-600 last:border-b-0"
                 >
-                  {folder === '/' ? '/ (root)' : folder}
+                  {folder === "/" ? "/ (root)" : folder}
                 </button>
               ))}
-              
+
               {/* Create new folder option */}
               <button
                 type="button"
@@ -100,7 +105,7 @@ export function FolderPicker({ value, onChange, disabled = false, allFolders }: 
             </div>
           )}
         </div>
-        
+
         <button
           type="button"
           onClick={() => setShowDropdown(!showDropdown)}
@@ -138,8 +143,8 @@ export function FolderPicker({ value, onChange, disabled = false, allFolders }: 
             <button
               type="button"
               onClick={() => {
-                setIsCreatingNew(false)
-                setNewFolderPath('')
+                setIsCreatingNew(false);
+                setNewFolderPath("");
               }}
               className="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm transition-colors"
             >
@@ -147,7 +152,8 @@ export function FolderPicker({ value, onChange, disabled = false, allFolders }: 
             </button>
           </div>
           <p className="mt-1 text-xs text-gray-400">
-            Use Linux-style paths. Examples: /Combat, /Utility/Detection, /Advanced/Rituals
+            Use Linux-style paths. Examples: /Combat, /Utility/Detection,
+            /Advanced/Rituals
           </p>
         </div>
       )}
@@ -160,5 +166,5 @@ export function FolderPicker({ value, onChange, disabled = false, allFolders }: 
         />
       )}
     </div>
-  )
+  );
 }

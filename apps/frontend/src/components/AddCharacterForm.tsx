@@ -1,19 +1,14 @@
-import { useState, useEffect } from 'react'
-import { type Character, SpellConvocation, CharacterRank } from '../types'
-import { useFormDirty } from '../hooks/useFormDirty'
+import { useState, useEffect } from "react";
+import { type Character, SpellConvocation, CharacterRank } from "../types";
+import { useFormDirty } from "../hooks/useFormDirty";
 
 interface CharacterFormProps {
-  onSave: (character: {
-      name: string;
-      convocations: SpellConvocation[];
-      rank: "Mavari" | "Satia-Mavari" | "Sheneva" | "Viran" | string;
-      game: string
-  }) => Promise<void>
-  onCancel: () => void
-  loading?: boolean
-  initialData?: Omit<Character, 'id'>
-  mode?: 'create' | 'edit'
-  onDirtyChange?: (isDirty: boolean) => void
+  onSave: (character: Omit<Character, "id">) => Promise<void>;
+  onCancel: () => void;
+  loading?: boolean;
+  initialData?: Omit<Character, "id">;
+  mode?: "create" | "edit";
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
 export function CharacterForm({
@@ -21,116 +16,127 @@ export function CharacterForm({
   onCancel,
   loading = false,
   initialData,
-  mode = 'create',
-  onDirtyChange
+  mode = "create",
+  onDirtyChange,
 }: CharacterFormProps) {
   const [formData, setFormData] = useState({
-    name: initialData?.name || '',
+    name: initialData?.name || "",
     convocations: initialData?.convocations || [],
-    rank: initialData?.rank || '',
-    game: initialData?.game || ''
-  })
-  const [errors, setErrors] = useState<{ [key: string]: string }>({})
+    rank: initialData?.rank || "",
+    game: initialData?.game || "",
+  });
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   // Dirty state tracking
   const initialFormData = {
-    name: initialData?.name || '',
+    name: initialData?.name || "",
     convocations: initialData?.convocations || [],
-    rank: initialData?.rank || '',
-    game: initialData?.game || ''
-  }
+    rank: initialData?.rank || "",
+    game: initialData?.game || "",
+  };
 
-  const { isDirty, updateData, markClean } = useFormDirty(initialFormData)
+  const { isDirty, updateData, markClean } = useFormDirty(initialFormData);
 
   // Notify parent of dirty state changes
   useEffect(() => {
-    onDirtyChange?.(isDirty)
-  }, [isDirty, onDirtyChange])
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   // Update form data when initialData changes (for edit mode)
   useEffect(() => {
     if (initialData) {
       setFormData({
-        name: initialData.name || '',
+        name: initialData.name || "",
         convocations: initialData.convocations || [],
-        rank: initialData.rank || '',
-        game: initialData.game || ''
-      })
+        rank: initialData.rank || "",
+        game: initialData.game || "",
+      });
     }
-  }, [initialData])
+  }, [initialData]);
 
   // Available convocations (excluding Neutral for characters)
-  const availableConvocations = Object.values(SpellConvocation).filter(conv => conv !== SpellConvocation.NEUTRAL)
-  const rankOptions = Object.values(CharacterRank)
+  const availableConvocations = Object.values(SpellConvocation).filter(
+    (conv) => conv !== SpellConvocation.NEUTRAL,
+  );
+  const rankOptions = Object.values(CharacterRank);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     // Validate required fields
-    const newErrors: { [key: string]: string } = {}
+    const newErrors: { [key: string]: string } = {};
     if (!formData.name.trim()) {
-      newErrors.name = 'Character name is required'
+      newErrors.name = "Character name is required";
     }
     if (!formData.convocations || formData.convocations.length === 0) {
-      newErrors.convocations = 'At least one convocation is required'
+      newErrors.convocations = "At least one convocation is required";
     }
     if (!formData.rank) {
-      newErrors.rank = 'Rank is required'
+      newErrors.rank = "Rank is required";
     }
 
     if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
-      return
+      setErrors(newErrors);
+      return;
     }
-    
+
     try {
-      await onSave(formData)
-      markClean(formData) // Mark form as clean after successful save
+      await onSave({
+        ...formData,
+        rank: formData.rank as CharacterRank,
+      });
+      markClean(formData); // Mark form as clean after successful save
     } catch (error) {
-      console.error('Failed to save character:', error)
+      console.error("Failed to save character:", error);
     }
-  }
+  };
 
   const handleChange = (field: string, value: string) => {
-    const newFormData = { ...formData, [field]: value }
-    setFormData(newFormData)
-    updateData(newFormData)
+    const newFormData = { ...formData, [field]: value };
+    setFormData(newFormData);
+    updateData(newFormData);
 
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }))
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
-  }
+  };
 
-  const handleConvocationChange = (convocation: SpellConvocation, checked: boolean) => {
+  const handleConvocationChange = (
+    convocation: SpellConvocation,
+    checked: boolean,
+  ) => {
     const newConvocations = checked
       ? [...formData.convocations, convocation]
-      : formData.convocations.filter(c => c !== convocation)
+      : formData.convocations.filter((c) => c !== convocation);
 
-    const newFormData = { ...formData, convocations: newConvocations }
-    setFormData(newFormData)
-    updateData(newFormData)
+    const newFormData = { ...formData, convocations: newConvocations };
+    setFormData(newFormData);
+    updateData(newFormData);
 
     // Clear error when user makes a selection
     if (errors.convocations) {
-      setErrors(prev => ({ ...prev, convocations: '' }))
+      setErrors((prev) => ({ ...prev, convocations: "" }));
     }
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Name field (required) */}
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">
+        <label
+          htmlFor="name"
+          className="block text-sm font-medium text-gray-300 mb-1"
+        >
           Character Name *
         </label>
         <input
           type="text"
           id="name"
           value={formData.name}
-          onChange={(e) => handleChange('name', e.target.value)}
+          onChange={(e) => handleChange("name", e.target.value)}
           className={`w-full px-3 py-2 bg-gray-700 border rounded text-white text-sm focus:outline-none focus:border-blue-500 ${
-            errors.name ? 'border-red-500' : 'border-gray-600'
+            errors.name ? "border-red-500" : "border-gray-600"
           }`}
           placeholder="Enter character name"
           disabled={loading}
@@ -145,15 +151,22 @@ export function CharacterForm({
         <label className="block text-sm font-medium text-gray-300 mb-2">
           Convocations *
         </label>
-        <div className={`space-y-2 p-3 bg-gray-700 border rounded ${
-          errors.convocations ? 'border-red-500' : 'border-gray-600'
-        }`}>
-          {availableConvocations.map(convocation => (
-            <label key={convocation} className="flex items-center space-x-2 cursor-pointer">
+        <div
+          className={`space-y-2 p-3 bg-gray-700 border rounded ${
+            errors.convocations ? "border-red-500" : "border-gray-600"
+          }`}
+        >
+          {availableConvocations.map((convocation) => (
+            <label
+              key={convocation}
+              className="flex items-center space-x-2 cursor-pointer"
+            >
               <input
                 type="checkbox"
                 checked={formData.convocations.includes(convocation)}
-                onChange={(e) => handleConvocationChange(convocation, e.target.checked)}
+                onChange={(e) =>
+                  handleConvocationChange(convocation, e.target.checked)
+                }
                 disabled={loading}
                 className="w-4 h-4 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500 focus:ring-2"
               />
@@ -171,21 +184,26 @@ export function CharacterForm({
 
       {/* Rank field (required) */}
       <div>
-        <label htmlFor="rank" className="block text-sm font-medium text-gray-300 mb-1">
+        <label
+          htmlFor="rank"
+          className="block text-sm font-medium text-gray-300 mb-1"
+        >
           Rank *
         </label>
         <select
           id="rank"
           value={formData.rank}
-          onChange={(e) => handleChange('rank', e.target.value)}
+          onChange={(e) => handleChange("rank", e.target.value)}
           className={`w-full px-3 py-2 bg-gray-700 border rounded text-white text-sm focus:outline-none focus:border-blue-500 ${
-            errors.rank ? 'border-red-500' : 'border-gray-600'
+            errors.rank ? "border-red-500" : "border-gray-600"
           }`}
           disabled={loading}
         >
           <option value="">Select a rank</option>
-          {rankOptions.map(rank => (
-            <option key={rank} value={rank}>{rank}</option>
+          {rankOptions.map((rank) => (
+            <option key={rank} value={rank}>
+              {rank}
+            </option>
           ))}
         </select>
         {errors.rank && (
@@ -195,14 +213,17 @@ export function CharacterForm({
 
       {/* Game field (optional) */}
       <div>
-        <label htmlFor="game" className="block text-sm font-medium text-gray-300 mb-1">
+        <label
+          htmlFor="game"
+          className="block text-sm font-medium text-gray-300 mb-1"
+        >
           Game Information
         </label>
         <input
           type="text"
           id="game"
           value={formData.game}
-          onChange={(e) => handleChange('game', e.target.value)}
+          onChange={(e) => handleChange("game", e.target.value)}
           className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
           placeholder="Enter game information"
           disabled={loading}
@@ -216,7 +237,13 @@ export function CharacterForm({
           disabled={loading}
           className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white px-4 py-2 rounded text-sm font-medium transition-colors"
         >
-          {loading ? (mode === 'edit' ? 'Updating...' : 'Saving...') : (mode === 'edit' ? 'Update' : 'Save')}
+          {loading
+            ? mode === "edit"
+              ? "Updating..."
+              : "Saving..."
+            : mode === "edit"
+              ? "Update"
+              : "Save"}
         </button>
         <button
           type="button"
@@ -228,8 +255,8 @@ export function CharacterForm({
         </button>
       </div>
     </form>
-  )
+  );
 }
 
 // Backward compatibility export
-export const AddCharacterForm = CharacterForm
+export const AddCharacterForm = CharacterForm;

@@ -1,13 +1,13 @@
-import { useState } from 'react'
-import type { BonusEffect } from '../types'
+import { useState } from "react";
+import type { BonusEffect } from "../types";
 
 interface BonusEffectEditorProps {
-  bonusEffect: BonusEffect
-  index: number
-  onUpdate: (index: number, bonusEffect: BonusEffect) => void
-  onRemove: (index: number) => void
-  disabled?: boolean
-  error?: string
+  bonusEffect: BonusEffect;
+  index: number;
+  onUpdate: (index: number, bonusEffect: BonusEffect) => void;
+  onRemove: (index: number) => void;
+  disabled?: boolean;
+  error?: string;
 }
 
 export function BonusEffectEditor({
@@ -16,18 +16,20 @@ export function BonusEffectEditor({
   onUpdate,
   onRemove,
   disabled = false,
-  error
+  error,
 }: BonusEffectEditorProps) {
-  const [localEffect, setLocalEffect] = useState(bonusEffect)
+  const [localEffect, setLocalEffect] = useState(bonusEffect);
 
   const handleChange = (field: keyof BonusEffect, value: string | number) => {
-    const updatedEffect = { ...localEffect, [field]: value }
-    setLocalEffect(updatedEffect)
-    onUpdate(index, updatedEffect)
-  }
+    const updatedEffect = { ...localEffect, [field]: value };
+    setLocalEffect(updatedEffect);
+    onUpdate(index, updatedEffect);
+  };
 
   return (
-    <div className={`bg-gray-800 border rounded-lg p-4 space-y-3 ${error ? 'border-red-500' : 'border-gray-600'}`}>
+    <div
+      className={`bg-gray-800 border rounded-lg p-4 space-y-3 ${error ? "border-red-500" : "border-gray-600"}`}
+    >
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-medium text-gray-300">
           Bonus Effect #{index + 1}
@@ -39,8 +41,18 @@ export function BonusEffectEditor({
           className="text-red-400 hover:text-red-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
           title="Remove bonus effect"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -56,7 +68,9 @@ export function BonusEffectEditor({
             min="1"
             max="100"
             value={localEffect.masteryLevelMinimum}
-            onChange={(e) => handleChange('masteryLevelMinimum', parseInt(e.target.value) || 1)}
+            onChange={(e) =>
+              handleChange("masteryLevelMinimum", parseInt(e.target.value) || 1)
+            }
             className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
             placeholder="e.g., 60"
             disabled={disabled}
@@ -71,7 +85,7 @@ export function BonusEffectEditor({
           <textarea
             rows={2}
             value={localEffect.effectsDescription}
-            onChange={(e) => handleChange('effectsDescription', e.target.value)}
+            onChange={(e) => handleChange("effectsDescription", e.target.value)}
             className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500 resize-none"
             placeholder="Describe the bonus effect..."
             disabled={disabled}
@@ -79,9 +93,7 @@ export function BonusEffectEditor({
         </div>
       </div>
 
-      {error && (
-        <p className="text-xs text-red-400">{error}</p>
-      )}
+      {error && <p className="text-xs text-red-400">{error}</p>}
     </div>
-  )
+  );
 }

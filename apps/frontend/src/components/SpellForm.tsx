@@ -1,30 +1,18 @@
-import { useState, useEffect } from 'react'
-import {type BonusEffect, type Spell, SpellConvocation} from '../types'
-import { FolderPicker } from './FolderPicker'
-import { RichTextEditor } from './RichTextEditor'
-import { BonusEffectEditor } from './BonusEffectEditor'
-import { useFormDirty } from '../hooks/useFormDirty'
+import { useState, useEffect } from "react";
+import { type BonusEffect, type Spell, SpellConvocation } from "../types";
+import { FolderPicker } from "./FolderPicker";
+import { RichTextEditor } from "./RichTextEditor";
+import { BonusEffectEditor } from "./BonusEffectEditor";
+import { useFormDirty } from "../hooks/useFormDirty";
 
 interface SpellFormProps {
-  onSave: (spell: {
-    name: string;
-    convocation: "Lyahvi" | "Peleahn" | "Jmorvi" | "Fyvria" | "Odivshe" | "Savorya" | "Neutral" | string;
-    complexityLevel: number;
-    description: string;
-    bonusEffects: BonusEffect[];
-    castingTime: string;
-    range: string;
-    duration: string;
-    folderPath: string;
-    sourceBook: string;
-    sourcePage: number
-  }) => Promise<void>
-  onCancel: () => void
-  loading?: boolean
-  initialData?: Omit<Spell, 'id'>
-  mode?: 'create' | 'edit'
-  onDirtyChange?: (isDirty: boolean) => void
-  allSpells?: Spell[] // For extracting existing folder paths
+  onSave: (spell: Omit<Spell, "id">) => Promise<void>;
+  onCancel: () => void;
+  loading?: boolean;
+  initialData?: Omit<Spell, "id">;
+  mode?: "create" | "edit";
+  onDirtyChange?: (isDirty: boolean) => void;
+  allSpells?: Spell[]; // For extracting existing folder paths
 }
 
 export function SpellForm({
@@ -32,185 +20,200 @@ export function SpellForm({
   onCancel,
   loading = false,
   initialData,
-  mode = 'create',
+  mode = "create",
   allSpells = [],
-  onDirtyChange
+  onDirtyChange,
 }: SpellFormProps) {
   const [formData, setFormData] = useState({
-    name: initialData?.name || '',
-    convocation: initialData?.convocation || '',
+    name: initialData?.name || "",
+    convocation: initialData?.convocation || "",
     complexityLevel: initialData?.complexityLevel || 1,
-    description: initialData?.description || '',
+    description: initialData?.description || "",
     bonusEffects: initialData?.bonusEffects || [],
-    castingTime: initialData?.castingTime || '',
-    range: initialData?.range || '',
-    duration: initialData?.duration || '',
-    folderPath: initialData?.folderPath || '/',
-    sourceBook: initialData?.sourceBook || '',
-    sourcePage: initialData?.sourcePage || 0
-  })
-  const [errors, setErrors] = useState<{ [key: string]: string }>({})
+    castingTime: initialData?.castingTime || "",
+    range: initialData?.range || "",
+    duration: initialData?.duration || "",
+    folderPath: initialData?.folderPath || "/",
+    sourceBook: initialData?.sourceBook || "",
+    sourcePage: initialData?.sourcePage || 0,
+  });
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   // Dirty state tracking
   const initialFormData = {
-    name: initialData?.name || '',
-    convocation: initialData?.convocation || '',
+    name: initialData?.name || "",
+    convocation: initialData?.convocation || "",
     complexityLevel: initialData?.complexityLevel || 1,
-    description: initialData?.description || '',
+    description: initialData?.description || "",
     bonusEffects: initialData?.bonusEffects || [],
-    castingTime: initialData?.castingTime || '',
-    range: initialData?.range || '',
-    duration: initialData?.duration || '',
-    folderPath: initialData?.folderPath || '/',
-    sourceBook: initialData?.sourceBook || '',
-    sourcePage: initialData?.sourcePage || 0
-  }
+    castingTime: initialData?.castingTime || "",
+    range: initialData?.range || "",
+    duration: initialData?.duration || "",
+    folderPath: initialData?.folderPath || "/",
+    sourceBook: initialData?.sourceBook || "",
+    sourcePage: initialData?.sourcePage || 0,
+  };
 
-  const { isDirty, updateData, markClean } = useFormDirty(initialFormData)
+  const { isDirty, updateData, markClean } = useFormDirty(initialFormData);
 
   // Notify parent of dirty state changes
   useEffect(() => {
-    onDirtyChange?.(isDirty)
-  }, [isDirty, onDirtyChange])
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   // Update form data when initialData changes (for edit mode)
   useEffect(() => {
     if (initialData) {
       setFormData({
-        name: initialData.name || '',
-        convocation: initialData.convocation || '',
+        name: initialData.name || "",
+        convocation: initialData.convocation || "",
         complexityLevel: initialData.complexityLevel || 1,
-        description: initialData.description || '',
+        description: initialData.description || "",
         bonusEffects: initialData.bonusEffects || [],
-        castingTime: initialData.castingTime || '',
-        range: initialData.range || '',
-        duration: initialData.duration || '',
-        folderPath: initialData.folderPath || '/',
-        sourceBook: initialData.sourceBook || '',
-        sourcePage: initialData.sourcePage || 0
-      })
+        castingTime: initialData.castingTime || "",
+        range: initialData.range || "",
+        duration: initialData.duration || "",
+        folderPath: initialData.folderPath || "/",
+        sourceBook: initialData.sourceBook || "",
+        sourcePage: initialData.sourcePage || 0,
+      });
     }
-  }, [initialData])
+  }, [initialData]);
 
   // Extract existing folder paths from all spells
-  const existingFolders = allSpells.map(spell => spell.folderPath).filter(Boolean)
+  const existingFolders = allSpells
+    .map((spell) => spell.folderPath)
+    .filter(Boolean);
 
-  const convocationOptions = Object.values(SpellConvocation)
+  const convocationOptions = Object.values(SpellConvocation);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     // Validate required fields
-    const newErrors: { [key: string]: string } = {}
+    const newErrors: { [key: string]: string } = {};
     if (!formData.name.trim()) {
-      newErrors.name = 'Spell name is required'
+      newErrors.name = "Spell name is required";
     }
     if (!formData.convocation) {
-      newErrors.convocation = 'Convocation is required'
+      newErrors.convocation = "Convocation is required";
     }
     if (!formData.complexityLevel || formData.complexityLevel < 1) {
-      newErrors.complexityLevel = 'Complexity level must be at least 1'
+      newErrors.complexityLevel = "Complexity level must be at least 1";
     }
     // Strip Markdown formatting for validation
-    const descriptionText = formData.description.replace(/[#*_`~[\]()]/g, '').trim()
+    const descriptionText = formData.description
+      .replace(/[#*_`~[\]()]/g, "")
+      .trim();
     if (!descriptionText) {
-      newErrors.description = 'Spell description is required'
+      newErrors.description = "Spell description is required";
     }
 
     // Validate bonus effects
     formData.bonusEffects.forEach((effect, index) => {
-      if (!effect.masteryLevelMinimum || effect.masteryLevelMinimum < 1 || effect.masteryLevelMinimum > 100) {
-        newErrors[`bonusEffect_${index}`] = 'Mastery level must be between 1 and 100'
+      if (
+        !effect.masteryLevelMinimum ||
+        effect.masteryLevelMinimum < 1 ||
+        effect.masteryLevelMinimum > 100
+      ) {
+        newErrors[`bonusEffect_${index}`] =
+          "Mastery level must be between 1 and 100";
       }
       if (!effect.effectsDescription.trim()) {
-        newErrors[`bonusEffect_${index}`] = 'Effects description is required'
+        newErrors[`bonusEffect_${index}`] = "Effects description is required";
       }
-    })
+    });
 
     if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
-      return
+      setErrors(newErrors);
+      return;
     }
-    
+
     try {
-      await onSave(formData)
-      markClean(formData) // Mark form as clean after successful save
+      await onSave({
+        ...formData,
+        convocation: formData.convocation as SpellConvocation,
+      });
+      markClean(formData); // Mark form as clean after successful save
     } catch (error) {
-      console.error('Failed to save spell:', error)
+      console.error("Failed to save spell:", error);
     }
-  }
+  };
 
   const handleChange = (field: string, value: string | number) => {
-    const newFormData = { ...formData, [field]: value }
-    setFormData(newFormData)
-    updateData(newFormData)
+    const newFormData = { ...formData, [field]: value };
+    setFormData(newFormData);
+    updateData(newFormData);
 
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }))
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
-  }
+  };
 
   // Bonus Effects Management
   const handleAddBonusEffect = () => {
     const newBonusEffect: BonusEffect = {
       masteryLevelMinimum: 50,
-      effectsDescription: ''
-    }
+      effectsDescription: "",
+    };
     const newFormData = {
       ...formData,
-      bonusEffects: [...formData.bonusEffects, newBonusEffect]
-    }
-    setFormData(newFormData)
-    updateData(newFormData)
-  }
+      bonusEffects: [...formData.bonusEffects, newBonusEffect],
+    };
+    setFormData(newFormData);
+    updateData(newFormData);
+  };
 
   const handleUpdateBonusEffect = (index: number, bonusEffect: BonusEffect) => {
     const newFormData = {
       ...formData,
       bonusEffects: formData.bonusEffects.map((effect, i) =>
-        i === index ? bonusEffect : effect
-      )
-    }
-    setFormData(newFormData)
-    updateData(newFormData)
+        i === index ? bonusEffect : effect,
+      ),
+    };
+    setFormData(newFormData);
+    updateData(newFormData);
 
     // Clear any bonus effect errors
     if (errors[`bonusEffect_${index}`]) {
-      setErrors(prev => ({ ...prev, [`bonusEffect_${index}`]: '' }))
+      setErrors((prev) => ({ ...prev, [`bonusEffect_${index}`]: "" }));
     }
-  }
+  };
 
   const handleRemoveBonusEffect = (index: number) => {
     const newFormData = {
       ...formData,
-      bonusEffects: formData.bonusEffects.filter((_, i) => i !== index)
-    }
-    setFormData(newFormData)
-    updateData(newFormData)
+      bonusEffects: formData.bonusEffects.filter((_, i) => i !== index),
+    };
+    setFormData(newFormData);
+    updateData(newFormData);
 
     // Clear any bonus effect errors for this index
-    setErrors(prev => {
-      const newErrors = { ...prev }
-      delete newErrors[`bonusEffect_${index}`]
-      return newErrors
-    })
-  }
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[`bonusEffect_${index}`];
+      return newErrors;
+    });
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Name field (required) */}
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">
+        <label
+          htmlFor="name"
+          className="block text-sm font-medium text-gray-300 mb-1"
+        >
           Spell Name *
         </label>
         <input
           type="text"
           id="name"
           value={formData.name}
-          onChange={(e) => handleChange('name', e.target.value)}
+          onChange={(e) => handleChange("name", e.target.value)}
           className={`w-full px-3 py-2 bg-gray-700 border rounded text-white text-sm focus:outline-none focus:border-blue-500 ${
-            errors.name ? 'border-red-500' : 'border-gray-600'
+            errors.name ? "border-red-500" : "border-gray-600"
           }`}
           placeholder="Enter spell name"
           disabled={loading}
@@ -222,21 +225,26 @@ export function SpellForm({
 
       {/* Convocation field (required) */}
       <div>
-        <label htmlFor="convocation" className="block text-sm font-medium text-gray-300 mb-1">
+        <label
+          htmlFor="convocation"
+          className="block text-sm font-medium text-gray-300 mb-1"
+        >
           Convocation *
         </label>
         <select
           id="convocation"
           value={formData.convocation}
-          onChange={(e) => handleChange('convocation', e.target.value)}
+          onChange={(e) => handleChange("convocation", e.target.value)}
           className={`w-full px-3 py-2 bg-gray-700 border rounded text-white text-sm focus:outline-none focus:border-blue-500 ${
-            errors.convocation ? 'border-red-500' : 'border-gray-600'
+            errors.convocation ? "border-red-500" : "border-gray-600"
           }`}
           disabled={loading}
         >
           <option value="">Select a convocation</option>
-          {convocationOptions.map(convocation => (
-            <option key={convocation} value={convocation}>{convocation}</option>
+          {convocationOptions.map((convocation) => (
+            <option key={convocation} value={convocation}>
+              {convocation}
+            </option>
           ))}
         </select>
         {errors.convocation && (
@@ -246,7 +254,10 @@ export function SpellForm({
 
       {/* Complexity Level field (required) */}
       <div>
-        <label htmlFor="complexityLevel" className="block text-sm font-medium text-gray-300 mb-1">
+        <label
+          htmlFor="complexityLevel"
+          className="block text-sm font-medium text-gray-300 mb-1"
+        >
           Complexity Level *
         </label>
         <input
@@ -255,9 +266,11 @@ export function SpellForm({
           min="1"
           max="10"
           value={formData.complexityLevel}
-          onChange={(e) => handleChange('complexityLevel', parseInt(e.target.value) || 1)}
+          onChange={(e) =>
+            handleChange("complexityLevel", parseInt(e.target.value) || 1)
+          }
           className={`w-full px-3 py-2 bg-gray-700 border rounded text-white text-sm focus:outline-none focus:border-blue-500 ${
-            errors.complexityLevel ? 'border-red-500' : 'border-gray-600'
+            errors.complexityLevel ? "border-red-500" : "border-gray-600"
           }`}
           disabled={loading}
         />
@@ -273,7 +286,7 @@ export function SpellForm({
         </label>
         <RichTextEditor
           value={formData.description}
-          onChange={(value) => handleChange('description', value)}
+          onChange={(value) => handleChange("description", value)}
           placeholder="Enter spell description with rich formatting..."
           disabled={loading}
           error={!!errors.description}
@@ -296,8 +309,18 @@ export function SpellForm({
             className="bg-green-600 hover:bg-green-700 disabled:bg-green-800 disabled:cursor-not-allowed text-white px-3 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1"
             title="Add bonus effect"
           >
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            <svg
+              className="w-3 h-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
             </svg>
             Add Effect
           </button>
@@ -306,7 +329,8 @@ export function SpellForm({
         {formData.bonusEffects.length === 0 ? (
           <div className="bg-gray-800 border border-gray-600 rounded-lg p-4 text-center">
             <p className="text-gray-400 text-sm">
-              No bonus effects added yet. Click "Add Effect" to add mastery level bonuses.
+              No bonus effects added yet. Click "Add Effect" to add mastery
+              level bonuses.
             </p>
           </div>
         ) : (
@@ -326,7 +350,8 @@ export function SpellForm({
         )}
 
         <p className="mt-2 text-xs text-gray-500">
-          Bonus effects are unlocked when a character reaches the specified mastery level with this spell.
+          Bonus effects are unlocked when a character reaches the specified
+          mastery level with this spell.
         </p>
       </div>
 
@@ -334,7 +359,7 @@ export function SpellForm({
       <div>
         <FolderPicker
           value={formData.folderPath}
-          onChange={(folderPath) => handleChange('folderPath', folderPath)}
+          onChange={(folderPath) => handleChange("folderPath", folderPath)}
           disabled={loading}
           allFolders={existingFolders}
         />
@@ -342,14 +367,17 @@ export function SpellForm({
 
       {/* Casting Time field (optional) */}
       <div>
-        <label htmlFor="castingTime" className="block text-sm font-medium text-gray-300 mb-1">
+        <label
+          htmlFor="castingTime"
+          className="block text-sm font-medium text-gray-300 mb-1"
+        >
           Casting Time
         </label>
         <input
           type="text"
           id="castingTime"
           value={formData.castingTime}
-          onChange={(e) => handleChange('castingTime', e.target.value)}
+          onChange={(e) => handleChange("castingTime", e.target.value)}
           className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
           placeholder="e.g., 1 action, 1 minute"
           disabled={loading}
@@ -358,14 +386,17 @@ export function SpellForm({
 
       {/* Range field (optional) */}
       <div>
-        <label htmlFor="range" className="block text-sm font-medium text-gray-300 mb-1">
+        <label
+          htmlFor="range"
+          className="block text-sm font-medium text-gray-300 mb-1"
+        >
           Range
         </label>
         <input
           type="text"
           id="range"
           value={formData.range}
-          onChange={(e) => handleChange('range', e.target.value)}
+          onChange={(e) => handleChange("range", e.target.value)}
           className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
           placeholder="e.g., Touch, 30 feet"
           disabled={loading}
@@ -374,14 +405,17 @@ export function SpellForm({
 
       {/* Duration field (optional) */}
       <div>
-        <label htmlFor="duration" className="block text-sm font-medium text-gray-300 mb-1">
+        <label
+          htmlFor="duration"
+          className="block text-sm font-medium text-gray-300 mb-1"
+        >
           Duration
         </label>
         <input
           type="text"
           id="duration"
           value={formData.duration}
-          onChange={(e) => handleChange('duration', e.target.value)}
+          onChange={(e) => handleChange("duration", e.target.value)}
           className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
           placeholder="e.g., Instantaneous, 1 hour"
           disabled={loading}
@@ -395,7 +429,13 @@ export function SpellForm({
           disabled={loading}
           className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white px-4 py-2 rounded text-sm font-medium transition-colors"
         >
-          {loading ? (mode === 'edit' ? 'Updating...' : 'Saving...') : (mode === 'edit' ? 'Update' : 'Save')}
+          {loading
+            ? mode === "edit"
+              ? "Updating..."
+              : "Saving..."
+            : mode === "edit"
+              ? "Update"
+              : "Save"}
         </button>
         <button
           type="button"
@@ -407,5 +447,5 @@ export function SpellForm({
         </button>
       </div>
     </form>
-  )
+  );
 }

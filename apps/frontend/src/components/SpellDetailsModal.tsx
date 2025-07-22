@@ -1,22 +1,21 @@
 // 1. SpellDetailsModal.tsx
-import { type Spell } from '../types'
-import { MarkdownRenderer } from './MarkdownRenderer'
-import { Modal } from './Modal'
+import { type Spell } from "../types";
+import { MarkdownRenderer } from "./MarkdownRenderer";
+import { Modal } from "./Modal";
 
 interface SpellDetailsModalProps {
-  spell: Spell
-  onClose: () => void
-  isOpen: boolean
+  spell: Spell;
+  onClose: () => void;
+  isOpen: boolean;
 }
 
-export function SpellDetailsModal({ spell, onClose, isOpen }: SpellDetailsModalProps) {
+export function SpellDetailsModal({
+  spell,
+  onClose,
+  isOpen,
+}: SpellDetailsModalProps) {
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={spell.name}
-      size="lg"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title={spell.name} size="lg">
       <div className="space-y-4">
         <div className="text-gray-400">Convocation: {spell.convocation}</div>
         <div className="text-gray-400">Complexity: {spell.complexityLevel}</div>
@@ -30,7 +29,9 @@ export function SpellDetailsModal({ spell, onClose, isOpen }: SpellDetailsModalP
         {/* Bonus Effects */}
         {spell.bonusEffects && spell.bonusEffects.length > 0 && (
           <div className="mb-4">
-            <h3 className="text-lg font-semibold text-white mb-2">Bonus Effects</h3>
+            <h3 className="text-lg font-semibold text-white mb-2">
+              Bonus Effects
+            </h3>
             <div className="space-y-2">
               {spell.bonusEffects
                 .sort((a, b) => a.masteryLevelMinimum - b.masteryLevelMinimum)
@@ -53,5 +54,5 @@ export function SpellDetailsModal({ spell, onClose, isOpen }: SpellDetailsModalP
         <div className="text-gray-400">Duration: {spell.duration}</div>
       </div>
     </Modal>
-  )
+  );
 }
