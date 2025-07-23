@@ -1,135 +1,193 @@
-# Turborepo starter
+# HarnMaster Character Grimoire
 
-This Turborepo starter is maintained by the Turborepo core team.
+A spell reference tool for HarnMaster TTRPG players who play Shek-P'var (wizard) characters. This application allows players to quickly reference spell descriptions and manage their character's spell repertoire.
 
-## Using this example
+## About
 
-Run the following command:
+This tool was originally built for personal use to help manage and reference spells during HarnMaster gameplay. It provides a clean, organized interface for browsing spell descriptions, organizing spells into folders, and tracking which spells each character knows.
 
-```sh
-npx create-turbo@latest
-```
+- **Target Audience**: HarnMaster TTRPG players, specifically those playing Shek-P'var characters
+- **Intended Use**: Local reference tool for personal use
+- **Support**: This is a community tool provided as-is with no official support
 
-## What's inside?
+## Features
 
-This Turborepo includes the following packages/apps:
+- **Character Management**: Create and manage multiple Shek-P'var characters
+- **Spell Library**: Browse and search through comprehensive spell databases
+- **Spell Organization**: Organize spells into hierarchical folders by convocation or custom categories
+- **Character Grimoires**: Track which spells each character knows
+- **Spell Import**: Import spell data from CSV/JSON files
+- **Local Storage**: All data stored locally using SQLite database
 
-### Apps and Packages
+## Technology Stack
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+This is a full-stack web application built with:
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+### Frontend
+- **React 19** with TypeScript
+- **Vite** for development and building
+- **Tailwind CSS** for styling
+- **Zustand** for state management
 
-### Utilities
+### Backend
+- **Express.js** with TypeScript
+- **Prisma ORM** with SQLite database
+- **Zod** for validation
 
-This Turborepo has some additional tools already setup for you:
+### Development
+- **Turborepo** for monorepo management
+- **pnpm** for package management
+- **ESLint** and **Prettier** for code quality
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
-
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## Project Structure
 
 ```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+hmgrimoire/
+├── apps/
+│   ├── frontend/          # React web application
+│   └── backend/           # Express API server
+└── packages/
+    ├── api-client/        # API client library
+    ├── types/             # Shared TypeScript types
+    ├── validation/        # Zod validation schemas
+    ├── ui/                # Shared UI components
+    ├── eslint-config/     # ESLint configurations
+    └── typescript-config/ # TypeScript configurations
 
 ```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+## Prerequisites
+
+- **Node.js** 18 or higher
+- **pnpm** 9.0.0 or higher
+
+## Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/hmgrimoire.git
+   cd hmgrimoire
+   ```
+
+2. **Install dependencies**
+   ```bash
+   pnpm install
+   ```
+
+3. **Start the application**
+   ```bash
+   pnpm run start
+   ```
+
+4. **Access the application**
+   - Frontend: http://localhost:4173
+   - Backend API: http://localhost:3000
+
+## Usage
+
+### Getting Started
+1. Create your first Shek-P'var character using the character sidebar (left side). Clicking a character in the character sidebar will display that character's grimoire.
+2. Browse or search the spell library sidebar (right side).
+3. Add spells to the spell library by clicking the "+" button and selecting "Add Spell".
+4. Add spells to your character's grimoire by dragging and dropping from the spell library to the character's grimoire.
+5. Click on a spell in the grimoire to view its details.
+
+### Managing Characters
+- Use the left sidebar to create, edit, and delete characters.
+- Select a character to view and manage their spell repertoire.
+- Character data includes name, convocation(s), guilde rank, and game information.
+
+### Managing Spells
+- Use the right sidebar to browse the spell library. It comes preloaded with all canon spells, plus a selection of spells from the Grand Grimoire, as well as a few spells I wrote.
+- Use the existing folder structure (convocation and complexity level) or create folders to organize spells however you would like. You can move folders and spells in the spell library by dragging and dropping.
+- Search and filter spells using the search functionality
+- Spells can be imported from a JSON file.
+
+### Importing Spells with JSON
+- Click the "Import Spells" button in the spell library sidebar.
+- Select a JSON file to import.
+
+#### Expected JSON Format
+```json
+[
+  {
+    "name": "My Cool Spell",
+    "convocation": "Lyahvi",
+    "complexityLevel": 3,
+    "description": "Full Spell Description",
+    "bonusEffects": [
+      {
+        "masteryLevelMinimum": 60,
+        "effectsDescription": "Full Description of Bonus Effect"
+      },
+      {
+        "masteryLevelMinimum": 80,
+        "effectsDescription": "Full Description of Bonus Effect"
+      },
+      ...
+    ],
+    "castingTime": "15–CSI seconds",
+    "range": "Touch",
+    "duration": "Instantaneous",
+    "folderId": 1,
+    "sourceBook": "HarnMaster Magic",
+    "sourcePage": "Lyahvi 5"
+  },
+  ...
+]
 ```
 
-### Remote Caching
+## Development
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+### Available Scripts
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+```bash
+# Start both frontend and backend in development mode
+pnpm dev
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+# Start only the backend
+pnpm start:backend
 
-```
-cd my-turborepo
+# Start only the frontend
+pnpm start:frontend
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
+# Build all packages
+pnpm build
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
+# Run linting
+pnpm lint
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+# Format code
+pnpm format
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+# Type checking
+pnpm check-types
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
+# Stop all running processes
+pnpm stop
 ```
 
-## Useful Links
+### Database
 
-Learn more about the power of Turborepo:
+The application uses SQLite with Prisma ORM. The database file (`grimoire.db`) is created automatically in the backend directory when you first run the application.
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+## Contributing
+
+Contributions are welcome! If you have ideas for features that would make this tool more useful for the HarnMaster community:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+Please ensure your code follows the existing style and includes appropriate tests.
+
+## License
+
+This project is licensed under the ISC License.
+
+## Disclaimer
+
+This is an unofficial community tool for HarnMaster players. It is not affiliated with or endorsed by Columbia Games or the official HarnMaster product line. All spell data and game mechanics referenced are the property of their respective copyright holders.
+
+**No Support Provided**: This tool is provided as-is for the convenience of the HarnMaster community. No technical support, warranties, or guarantees are provided.
