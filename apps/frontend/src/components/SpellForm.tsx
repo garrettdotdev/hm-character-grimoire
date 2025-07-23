@@ -24,6 +24,40 @@ export function SpellForm({
   folders = [],
   onDirtyChange,
 }: SpellFormProps) {
+  // Helper function to find folder path by ID
+  const getFolderPathById = (folderId: number, folderList: FolderWithPath[] = folders): string => {
+    const findFolder = (folders: FolderWithPath[]): string | null => {
+      for (const folder of folders) {
+        if (folder.id === folderId) {
+          return folder.path;
+        }
+        if (folder.children) {
+          const childResult = findFolder(folder.children);
+          if (childResult) return childResult;
+        }
+      }
+      return null;
+    };
+    return findFolder(folderList) || "/";
+  };
+
+  // Helper function to find folder ID by path
+  const getFolderIdByPath = (folderPath: string, folderList: FolderWithPath[] = folders): number => {
+    const findFolder = (folders: FolderWithPath[]): number | null => {
+      for (const folder of folders) {
+        if (folder.path === folderPath) {
+          return folder.id;
+        }
+        if (folder.children) {
+          const childResult = findFolder(folder.children);
+          if (childResult) return childResult;
+        }
+      }
+      return null;
+    };
+    return findFolder(folderList) || 1; // Default to root folder ID
+  };
+
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     convocation: initialData?.convocation || "",
@@ -33,7 +67,7 @@ export function SpellForm({
     castingTime: initialData?.castingTime || "",
     range: initialData?.range || "",
     duration: initialData?.duration || "",
-    folderId: initialData?.folderId || 1, // Default to root folder
+    folderPath: initialData?.folderId ? getFolderPathById(initialData.folderId, folders) : "/", // Store path instead of ID
     sourceBook: initialData?.sourceBook || "",
     sourcePage: initialData?.sourcePage || 0,
   });
@@ -49,7 +83,7 @@ export function SpellForm({
     castingTime: initialData?.castingTime || "",
     range: initialData?.range || "",
     duration: initialData?.duration || "",
-    folderId: initialData?.folderId || 1, // Default to root folder
+    folderPath: initialData?.folderId ? getFolderPathById(initialData.folderId, folders) : "/", // Store path instead of ID
     sourceBook: initialData?.sourceBook || "",
     sourcePage: initialData?.sourcePage || 0,
   };
@@ -73,12 +107,12 @@ export function SpellForm({
         castingTime: initialData.castingTime || "",
         range: initialData.range || "",
         duration: initialData.duration || "",
-        folderId: initialData.folderId || 1, // Default to root folder
+        folderPath: initialData.folderId ? getFolderPathById(initialData.folderId, folders) : "/", // Store path instead of ID
         sourceBook: initialData.sourceBook || "",
         sourcePage: initialData.sourcePage || 0,
       });
     }
-  }, [initialData]);
+  }, [initialData, folders]); // Add folders dependency since we use it in getFolderPathById
 
   // Folders are now passed as a prop
 
@@ -127,8 +161,13 @@ export function SpellForm({
     }
 
     try {
+      // Convert folder path back to ID for saving
+      const { folderPath, ...restFormData } = formData;
+      const folderId = getFolderIdByPath(folderPath, folders);
+
       await onSave({
-        ...formData,
+        ...restFormData,
+        folderId,
         convocation: formData.convocation as SpellConvocation,
       });
       markClean(formData); // Mark form as clean after successful save
@@ -355,8 +394,8 @@ export function SpellForm({
       {/* Folder field */}
       <div>
         <FolderPicker
-          value={formData.folderId}
-          onChange={(folderId) => handleChange("folderId", folderId)}
+          value={formData.folderPath}
+          onChange={(folderPath) => handleChange("folderPath", folderPath)}
           disabled={loading}
           folders={folders}
         />
