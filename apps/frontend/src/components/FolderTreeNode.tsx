@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Spell } from "@repo/types";
 import type { FolderNode } from "../utils/folderTree";
+import { SpellListItem } from "./SpellListItem";
 
 interface FolderTreeNodeProps {
   node: FolderNode;
@@ -302,40 +303,16 @@ export function FolderTreeNode({
 
           {/* Spells in this folder */}
           {node.spells.map((spell) => (
-            <div
+            <SpellListItem
               key={spell.id}
-              className={`p-3 border-b border-gray-700 cursor-pointer transition-colors hover:bg-gray-700 relative group ${
-                selectedSpell?.id === spell.id
-                  ? "bg-gray-700 border-r-4 border-r-blue-500"
-                  : ""
-              }`}
-              style={{ paddingLeft: `${indentLevel + 20}px` }}
-              draggable={true} // Always draggable for both folder moves and character assignment
-              onDragStart={(e) => handleSpellDragStart(e, spell)}
-              onClick={() => onSpellSelect(spell)}
-            >
-              <div className="font-medium pr-8">{spell.name}</div>
-              <div className="text-sm text-gray-400">
-                {spell.convocation} • Level {spell.complexityLevel}
-              </div>
-              <div className="text-xs text-gray-500 mt-1 line-clamp-2">
-                {spell.description}
-              </div>
-
-              {/* Add to character button */}
-              {hasSelectedCharacter && onAddSpellToCharacter && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAddSpellToCharacter(spell);
-                  }}
-                  className="absolute top-2 right-2 w-6 h-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                  title="Add spell to character"
-                >
-                  +
-                </button>
-              )}
-            </div>
+              spell={spell}
+              selectedSpell={selectedSpell}
+              onSpellSelect={onSpellSelect}
+              onAddSpellToCharacter={onAddSpellToCharacter}
+              hasSelectedCharacter={hasSelectedCharacter}
+              onMoveSpell={onMoveSpell}
+              indentLevel={indentLevel}
+            />
           ))}
         </div>
       )}

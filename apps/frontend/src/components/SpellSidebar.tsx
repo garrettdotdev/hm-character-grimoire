@@ -1,6 +1,7 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import type { Spell, FolderWithPath } from "@repo/types";
 import { FolderTreeNode } from "./FolderTreeNode";
+import { SpellListItem } from "./SpellListItem";
 import { buildFolderTree, type FolderTreeState } from "../utils/folderTree";
 import { AddContextMenu } from "./AddContextMenu";
 import { DeleteFolderDialog } from "./DeleteFolderDialog";
@@ -46,11 +47,27 @@ export function SpellSidebar({
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [folderToDelete, setFolderToDelete] = useState<{ folderId: number; name: string } | null>(null);
   const [deletingFolder, setDeletingFolder] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredSpells, setFilteredSpells] = useState<Spell[]>(spells);
   const addButtonRef = useRef<HTMLButtonElement>(null);
 
-  // No need to fetch empty folders separately - they're included in the folders prop // Refetch when spells change
+  // Filter spells based on search term
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredSpells(spells);
+    } else {
+      const filtered = spells
+        .filter(
+          (spell) =>
+            spell.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            spell.description.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        .sort((a, b) => a.name.localeCompare(b.name)); // Alphabetical sorting for search results
+      setFilteredSpells(filtered);
+    }
+  }, [spells, searchTerm]);
 
-  // Build the folder tree from normalized folder data and spells
+  // Build the folder tree from normalized folder data and filtered spells
   const folderTree = useMemo(() => {
     if (folders.length === 0) {
       // Return a minimal root node if no folders are loaded yet
@@ -64,8 +81,8 @@ export function SpellSidebar({
         isExpanded: true,
       };
     }
-    return buildFolderTree(folders, spells, expandedFolders);
-  }, [folders, spells, expandedFolders]);
+    return buildFolderTree(folders, filteredSpells, expandedFolders);
+  }, [folders, filteredSpells, expandedFolders]);
 
   const handleToggleFolder = (folderId: number) => {
     setExpandedFolders((prev) => ({
@@ -224,11 +241,28 @@ export function SpellSidebar({
           <div className="flex items-center justify-center p-8 text-gray-400 italic">
             Loading spells...
           </div>
-        ) : spells.length === 0 ? (
+        ) : filteredSpells.length === 0 ? (
           <div className="flex items-center justify-center p-8 text-gray-400 italic">
-            No spells found
+            {searchTerm ? "No spells match your search" : "No spells found"}
+          </div>
+        ) : searchTerm ? (
+          // Flat list when searching
+          <div>
+            {filteredSpells.map((spell) => (
+              <SpellListItem
+                key={spell.id}
+                spell={spell}
+                selectedSpell={selectedSpell}
+                onSpellSelect={onSpellSelect}
+                onAddSpellToCharacter={onAddSpellToCharacter}
+                hasSelectedCharacter={hasSelectedCharacter}
+                onMoveSpell={handleMoveSpell}
+                indentLevel={0} // No indentation for flat list
+              />
+            ))}
           </div>
         ) : (
+          // Folder tree when not searching
           <FolderTreeNode
             node={folderTree}
             selectedSpell={selectedSpell}
@@ -244,6 +278,19 @@ export function SpellSidebar({
             onMoveFolder={handleMoveFolder}
           />
         )}
+      </div>
+
+      {/* Footer with search */}
+      <div className="p-4 border-t border-gray-700 flex justify-between items-center h-[76px]">
+        <div className="flex-1">
+          <input
+            type="text"
+            placeholder="Search spells..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
+          />
+        </div>
       </div>
 
       {/* Delete Folder Dialog */}
