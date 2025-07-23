@@ -46,12 +46,7 @@ export function FolderTreeNode({
     onToggleFolder(node.id);
   };
 
-  const handleSpellDragStart = (e: React.DragEvent, spell: Spell) => {
-    e.dataTransfer.setData("application/json", JSON.stringify(spell));
-    e.dataTransfer.setData("text/plain", "spell"); // Type identifier
-    // Support both copy (to character) and move (between folders)
-    e.dataTransfer.effectAllowed = "copyMove";
-  };
+
 
   const handleFolderDragStart = (e: React.DragEvent) => {
     e.stopPropagation(); // Prevent parent folder drag events
