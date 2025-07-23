@@ -77,7 +77,7 @@ export class PrismaSpellRepository implements ISpellRepository {
         duration: spell.duration,
         folderId: spell.folderId || 1, // Default to root folder
         sourceBook: spell.sourceBook || '',
-        sourcePage: spell.sourcePage || 0,
+        sourcePage: spell.sourcePage || '',
       }
     });
   }
@@ -96,7 +96,7 @@ export class PrismaSpellRepository implements ISpellRepository {
         duration: spell.duration,
         folderId: spell.folderId || 1, // Default to root folder
         sourceBook: spell.sourceBook || '',
-        sourcePage: spell.sourcePage || 0,
+        sourcePage: spell.sourcePage || '',
       }
     });
   }
@@ -205,7 +205,7 @@ export class PrismaSpellRepository implements ISpellRepository {
       duration: spell.duration,
       folderId: spell.folderId,
       sourceBook: spell.sourceBook || '',
-      sourcePage: spell.sourcePage || 0,
+      sourcePage: spell.sourcePage || '',
     };
   }
 }

@@ -52,6 +52,15 @@ export function SpellDetailsModal({
         <div className="text-gray-400">Time: {spell.castingTime}</div>
         <div className="text-gray-400">Range: {spell.range}</div>
         <div className="text-gray-400">Duration: {spell.duration}</div>
+
+        {/* Source Information */}
+        {(spell.sourceBook || spell.sourcePage) && (
+          <div className="text-gray-400">
+            Source: {spell.sourceBook}
+            {spell.sourceBook && spell.sourcePage && `, p. ${spell.sourcePage}`}
+            {!spell.sourceBook && spell.sourcePage && `Page ${spell.sourcePage}`}
+          </div>
+        )}
       </div>
     </Modal>
   );

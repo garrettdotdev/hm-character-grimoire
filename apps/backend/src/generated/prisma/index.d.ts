@@ -2325,13 +2325,11 @@ export namespace Prisma {
   export type SpellAvgAggregateOutputType = {
     complexityLevel: number | null
     folderId: number | null
-    sourcePage: number | null
   }
 
   export type SpellSumAggregateOutputType = {
     complexityLevel: number | null
     folderId: number | null
-    sourcePage: number | null
   }
 
   export type SpellMinAggregateOutputType = {
@@ -2346,7 +2344,7 @@ export namespace Prisma {
     duration: string | null
     folderId: number | null
     sourceBook: string | null
-    sourcePage: number | null
+    sourcePage: string | null
   }
 
   export type SpellMaxAggregateOutputType = {
@@ -2361,7 +2359,7 @@ export namespace Prisma {
     duration: string | null
     folderId: number | null
     sourceBook: string | null
-    sourcePage: number | null
+    sourcePage: string | null
   }
 
   export type SpellCountAggregateOutputType = {
@@ -2384,13 +2382,11 @@ export namespace Prisma {
   export type SpellAvgAggregateInputType = {
     complexityLevel?: true
     folderId?: true
-    sourcePage?: true
   }
 
   export type SpellSumAggregateInputType = {
     complexityLevel?: true
     folderId?: true
-    sourcePage?: true
   }
 
   export type SpellMinAggregateInputType = {
@@ -2537,7 +2533,7 @@ export namespace Prisma {
     duration: string
     folderId: number
     sourceBook: string
-    sourcePage: number
+    sourcePage: string
     _count: SpellCountAggregateOutputType | null
     _avg: SpellAvgAggregateOutputType | null
     _sum: SpellSumAggregateOutputType | null
@@ -2655,7 +2651,7 @@ export namespace Prisma {
       duration: string
       folderId: number
       sourceBook: string
-      sourcePage: number
+      sourcePage: string
     }, ExtArgs["result"]["spell"]>
     composites: {}
   }
@@ -3092,7 +3088,7 @@ export namespace Prisma {
     readonly duration: FieldRef<"Spell", 'String'>
     readonly folderId: FieldRef<"Spell", 'Int'>
     readonly sourceBook: FieldRef<"Spell", 'String'>
-    readonly sourcePage: FieldRef<"Spell", 'Int'>
+    readonly sourcePage: FieldRef<"Spell", 'String'>
   }
     
 
@@ -4773,7 +4769,7 @@ export namespace Prisma {
     duration?: StringFilter<"Spell"> | string
     folderId?: IntFilter<"Spell"> | number
     sourceBook?: StringFilter<"Spell"> | string
-    sourcePage?: IntFilter<"Spell"> | number
+    sourcePage?: StringFilter<"Spell"> | string
     folder?: XOR<FolderScalarRelationFilter, FolderWhereInput>
     characters?: CharacterListRelationFilter
   }
@@ -4810,7 +4806,7 @@ export namespace Prisma {
     duration?: StringFilter<"Spell"> | string
     folderId?: IntFilter<"Spell"> | number
     sourceBook?: StringFilter<"Spell"> | string
-    sourcePage?: IntFilter<"Spell"> | number
+    sourcePage?: StringFilter<"Spell"> | string
     folder?: XOR<FolderScalarRelationFilter, FolderWhereInput>
     characters?: CharacterListRelationFilter
   }, "id">
@@ -4850,7 +4846,7 @@ export namespace Prisma {
     duration?: StringWithAggregatesFilter<"Spell"> | string
     folderId?: IntWithAggregatesFilter<"Spell"> | number
     sourceBook?: StringWithAggregatesFilter<"Spell"> | string
-    sourcePage?: IntWithAggregatesFilter<"Spell"> | number
+    sourcePage?: StringWithAggregatesFilter<"Spell"> | string
   }
 
   export type CharacterWhereInput = {
@@ -4972,7 +4968,7 @@ export namespace Prisma {
     range: string
     duration: string
     sourceBook?: string
-    sourcePage?: number
+    sourcePage?: string
     folder: FolderCreateNestedOneWithoutSpellsInput
     characters?: CharacterCreateNestedManyWithoutSpellsInput
   }
@@ -4989,7 +4985,7 @@ export namespace Prisma {
     duration: string
     folderId: number
     sourceBook?: string
-    sourcePage?: number
+    sourcePage?: string
     characters?: CharacterUncheckedCreateNestedManyWithoutSpellsInput
   }
 
@@ -5004,7 +5000,7 @@ export namespace Prisma {
     range?: StringFieldUpdateOperationsInput | string
     duration?: StringFieldUpdateOperationsInput | string
     sourceBook?: StringFieldUpdateOperationsInput | string
-    sourcePage?: IntFieldUpdateOperationsInput | number
+    sourcePage?: StringFieldUpdateOperationsInput | string
     folder?: FolderUpdateOneRequiredWithoutSpellsNestedInput
     characters?: CharacterUpdateManyWithoutSpellsNestedInput
   }
@@ -5021,7 +5017,7 @@ export namespace Prisma {
     duration?: StringFieldUpdateOperationsInput | string
     folderId?: IntFieldUpdateOperationsInput | number
     sourceBook?: StringFieldUpdateOperationsInput | string
-    sourcePage?: IntFieldUpdateOperationsInput | number
+    sourcePage?: StringFieldUpdateOperationsInput | string
     characters?: CharacterUncheckedUpdateManyWithoutSpellsNestedInput
   }
 
@@ -5037,7 +5033,7 @@ export namespace Prisma {
     duration: string
     folderId: number
     sourceBook?: string
-    sourcePage?: number
+    sourcePage?: string
   }
 
   export type SpellUpdateManyMutationInput = {
@@ -5051,7 +5047,7 @@ export namespace Prisma {
     range?: StringFieldUpdateOperationsInput | string
     duration?: StringFieldUpdateOperationsInput | string
     sourceBook?: StringFieldUpdateOperationsInput | string
-    sourcePage?: IntFieldUpdateOperationsInput | number
+    sourcePage?: StringFieldUpdateOperationsInput | string
   }
 
   export type SpellUncheckedUpdateManyInput = {
@@ -5066,7 +5062,7 @@ export namespace Prisma {
     duration?: StringFieldUpdateOperationsInput | string
     folderId?: IntFieldUpdateOperationsInput | number
     sourceBook?: StringFieldUpdateOperationsInput | string
-    sourcePage?: IntFieldUpdateOperationsInput | number
+    sourcePage?: StringFieldUpdateOperationsInput | string
   }
 
   export type CharacterCreateInput = {
@@ -5338,7 +5334,6 @@ export namespace Prisma {
   export type SpellAvgOrderByAggregateInput = {
     complexityLevel?: SortOrder
     folderId?: SortOrder
-    sourcePage?: SortOrder
   }
 
   export type SpellMaxOrderByAggregateInput = {
@@ -5374,7 +5369,6 @@ export namespace Prisma {
   export type SpellSumOrderByAggregateInput = {
     complexityLevel?: SortOrder
     folderId?: SortOrder
-    sourcePage?: SortOrder
   }
 
   export type CharacterCountOrderByAggregateInput = {
@@ -5802,7 +5796,7 @@ export namespace Prisma {
     range: string
     duration: string
     sourceBook?: string
-    sourcePage?: number
+    sourcePage?: string
     characters?: CharacterCreateNestedManyWithoutSpellsInput
   }
 
@@ -5817,7 +5811,7 @@ export namespace Prisma {
     range: string
     duration: string
     sourceBook?: string
-    sourcePage?: number
+    sourcePage?: string
     characters?: CharacterUncheckedCreateNestedManyWithoutSpellsInput
   }
 
@@ -5913,7 +5907,7 @@ export namespace Prisma {
     duration?: StringFilter<"Spell"> | string
     folderId?: IntFilter<"Spell"> | number
     sourceBook?: StringFilter<"Spell"> | string
-    sourcePage?: IntFilter<"Spell"> | number
+    sourcePage?: StringFilter<"Spell"> | string
   }
 
   export type FolderCreateWithoutSpellsInput = {
@@ -6021,7 +6015,7 @@ export namespace Prisma {
     range: string
     duration: string
     sourceBook?: string
-    sourcePage?: number
+    sourcePage?: string
     folder: FolderCreateNestedOneWithoutSpellsInput
   }
 
@@ -6037,7 +6031,7 @@ export namespace Prisma {
     duration: string
     folderId: number
     sourceBook?: string
-    sourcePage?: number
+    sourcePage?: string
   }
 
   export type SpellCreateOrConnectWithoutCharactersInput = {
@@ -6078,7 +6072,7 @@ export namespace Prisma {
     range: string
     duration: string
     sourceBook?: string
-    sourcePage?: number
+    sourcePage?: string
   }
 
   export type FolderUpdateWithoutParentInput = {
@@ -6113,7 +6107,7 @@ export namespace Prisma {
     range?: StringFieldUpdateOperationsInput | string
     duration?: StringFieldUpdateOperationsInput | string
     sourceBook?: StringFieldUpdateOperationsInput | string
-    sourcePage?: IntFieldUpdateOperationsInput | number
+    sourcePage?: StringFieldUpdateOperationsInput | string
     characters?: CharacterUpdateManyWithoutSpellsNestedInput
   }
 
@@ -6128,7 +6122,7 @@ export namespace Prisma {
     range?: StringFieldUpdateOperationsInput | string
     duration?: StringFieldUpdateOperationsInput | string
     sourceBook?: StringFieldUpdateOperationsInput | string
-    sourcePage?: IntFieldUpdateOperationsInput | number
+    sourcePage?: StringFieldUpdateOperationsInput | string
     characters?: CharacterUncheckedUpdateManyWithoutSpellsNestedInput
   }
 
@@ -6143,7 +6137,7 @@ export namespace Prisma {
     range?: StringFieldUpdateOperationsInput | string
     duration?: StringFieldUpdateOperationsInput | string
     sourceBook?: StringFieldUpdateOperationsInput | string
-    sourcePage?: IntFieldUpdateOperationsInput | number
+    sourcePage?: StringFieldUpdateOperationsInput | string
   }
 
   export type CharacterUpdateWithoutSpellsInput = {
@@ -6181,7 +6175,7 @@ export namespace Prisma {
     range?: StringFieldUpdateOperationsInput | string
     duration?: StringFieldUpdateOperationsInput | string
     sourceBook?: StringFieldUpdateOperationsInput | string
-    sourcePage?: IntFieldUpdateOperationsInput | number
+    sourcePage?: StringFieldUpdateOperationsInput | string
     folder?: FolderUpdateOneRequiredWithoutSpellsNestedInput
   }
 
@@ -6197,7 +6191,7 @@ export namespace Prisma {
     duration?: StringFieldUpdateOperationsInput | string
     folderId?: IntFieldUpdateOperationsInput | number
     sourceBook?: StringFieldUpdateOperationsInput | string
-    sourcePage?: IntFieldUpdateOperationsInput | number
+    sourcePage?: StringFieldUpdateOperationsInput | string
   }
 
   export type SpellUncheckedUpdateManyWithoutCharactersInput = {
@@ -6212,7 +6206,7 @@ export namespace Prisma {
     duration?: StringFieldUpdateOperationsInput | string
     folderId?: IntFieldUpdateOperationsInput | number
     sourceBook?: StringFieldUpdateOperationsInput | string
-    sourcePage?: IntFieldUpdateOperationsInput | number
+    sourcePage?: StringFieldUpdateOperationsInput | string
   }
 
 

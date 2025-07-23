@@ -14,7 +14,7 @@ interface SpellRow {
   duration: string;
   folder_id: number;
   source_book: string;
-  source_page: number;
+  source_page: string;
 }
 
 export class SpellRepository extends BaseRepository implements ISpellRepository {
@@ -156,7 +156,7 @@ export class SpellRepository extends BaseRepository implements ISpellRepository 
       duration: row.duration,
       folderId: row.folder_id || 1, // Default to root folder
       sourceBook: row.source_book || '',
-      sourcePage: row.source_page || 0,
+      sourcePage: row.source_page || '',
     };
   }
 }

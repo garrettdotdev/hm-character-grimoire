@@ -69,7 +69,7 @@ export function SpellForm({
     duration: initialData?.duration || "",
     folderPath: initialData?.folderId ? getFolderPathById(initialData.folderId, folders) : "/", // Store path instead of ID
     sourceBook: initialData?.sourceBook || "",
-    sourcePage: initialData?.sourcePage || 0,
+    sourcePage: initialData?.sourcePage || "",
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -85,7 +85,7 @@ export function SpellForm({
     duration: initialData?.duration || "",
     folderPath: initialData?.folderId ? getFolderPathById(initialData.folderId, folders) : "/", // Store path instead of ID
     sourceBook: initialData?.sourceBook || "",
-    sourcePage: initialData?.sourcePage || 0,
+    sourcePage: initialData?.sourcePage || "",
   };
 
   const { isDirty, updateData, markClean } = useFormDirty(initialFormData);
@@ -109,10 +109,10 @@ export function SpellForm({
         duration: initialData.duration || "",
         folderPath: initialData.folderId ? getFolderPathById(initialData.folderId, folders) : "/", // Store path instead of ID
         sourceBook: initialData.sourceBook || "",
-        sourcePage: initialData.sourcePage || 0,
+        sourcePage: initialData.sourcePage || "",
       });
     }
-  }, [initialData, folders]); // Add folders dependency since we use it in getFolderPathById
+  }, [initialData]); // Remove folders dependency to prevent form reset when folders change
 
   // Folders are now passed as a prop
 
@@ -454,6 +454,44 @@ export function SpellForm({
           onChange={(e) => handleChange("duration", e.target.value)}
           className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
           placeholder="e.g., Instantaneous, 1 hour"
+          disabled={loading}
+        />
+      </div>
+
+      {/* Source Book field (optional) */}
+      <div>
+        <label
+          htmlFor="sourceBook"
+          className="block text-sm font-medium text-gray-300 mb-1"
+        >
+          Source Book
+        </label>
+        <input
+          type="text"
+          id="sourceBook"
+          value={formData.sourceBook}
+          onChange={(e) => handleChange("sourceBook", e.target.value)}
+          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
+          placeholder="e.g., HarnMaster Magic, Shek-Pvar"
+          disabled={loading}
+        />
+      </div>
+
+      {/* Source Page field (optional) */}
+      <div>
+        <label
+          htmlFor="sourcePage"
+          className="block text-sm font-medium text-gray-300 mb-1"
+        >
+          Source Page
+        </label>
+        <input
+          type="text"
+          id="sourcePage"
+          value={formData.sourcePage}
+          onChange={(e) => handleChange("sourcePage", e.target.value)}
+          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
+          placeholder="e.g., Neutral 4, Fyvria 12, 42"
           disabled={loading}
         />
       </div>

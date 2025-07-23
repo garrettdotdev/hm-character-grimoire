@@ -47,7 +47,7 @@ export class SpellService {
       duration: data.duration || '',
       folderId,
       sourceBook: data.sourceBook || '',
-      sourcePage: data.sourcePage || 0,
+      sourcePage: data.sourcePage || '',
     };
 
     await this.spellRepository.create(spell);
@@ -107,7 +107,7 @@ export class SpellService {
           duration: spellData.duration || '',
           folderId: spellData.folderId || 1,
           sourceBook: spellData.sourceBook || '',
-          sourcePage: spellData.sourcePage || 0,
+          sourcePage: spellData.sourcePage || '',
         };
 
         // Create spell directly with transaction client

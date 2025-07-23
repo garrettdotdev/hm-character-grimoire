@@ -33,7 +33,7 @@ model Spell {
   duration        String
   folderId        Int         @map("folder_id")
   sourceBook      String      @default("") @map("source_book")
-  sourcePage      Int         @default(0) @map("source_page")
+  sourcePage      String      @default("") @map("source_page")
   folder          Folder      @relation(fields: [folderId], references: [id], onDelete: Cascade)
   characters      Character[] @relation("CharacterSpells")
 
