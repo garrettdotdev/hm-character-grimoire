@@ -20,7 +20,7 @@ export function SpellImportModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Dirty state tracking
-  const initialFormData = { selectedFile: null, previewData: null };
+  const initialFormData = { selectedFile: null as File | null, previewData: null as any[] | null };
   const { isDirty, updateData, markClean } = useFormDirty(initialFormData);
 
   // Notify parent of dirty state changes
@@ -199,7 +199,7 @@ export function SpellImportModal({
     "castingTime": "1 action",
     "range": "Touch",
     "duration": "Instantaneous",
-    "folderPath": "/",
+    "folderId": 1,
     "sourceBook": "Book Name",
     "sourcePage": 123
   }

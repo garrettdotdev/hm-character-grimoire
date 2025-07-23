@@ -1,11 +1,12 @@
 import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import { useFormDirty } from "../hooks/useFormDirty";
+import type { FolderWithPath } from "@repo/types";
 
 interface AddFolderModalProps {
-  onSave: (folderPath: string) => Promise<void>;
+  onSave: (name: string, parentId: number) => Promise<void>;
   onCancel: () => void;
   loading?: boolean;
-  allFolders: string[];
+  allFolders: FolderWithPath[];
   onDirtyChange?: (isDirty: boolean) => void;
 }
 
@@ -20,11 +21,12 @@ export const AddFolderModal = forwardRef<AddFolderModalRef, AddFolderModalProps>
   allFolders,
   onDirtyChange,
 }, ref) => {
-  const [folderPath, setFolderPath] = useState("");
+  const [folderName, setFolderName] = useState("");
+  const [parentId, setParentId] = useState<number>(1); // Default to root
   const [error, setError] = useState("");
 
   // Dirty state tracking
-  const initialFormData = { folderPath: "" };
+  const initialFormData = { folderName: "", parentId: 1 };
   const { isDirty, updateData, markClean } = useFormDirty(initialFormData);
 
   // Notify parent of dirty state changes
@@ -34,71 +36,55 @@ export const AddFolderModal = forwardRef<AddFolderModalRef, AddFolderModalProps>
 
   useEffect(() => {
     // Clear error when user starts typing
-    if (error && folderPath) {
+    if (error && folderName) {
       setError("");
     }
     // Update dirty state
-    updateData({ folderPath });
-  }, [folderPath, error, updateData]);
+    updateData({ folderName, parentId });
+  }, [folderName, parentId, error, updateData]);
 
-  const validateFolderPath = (path: string): string | null => {
-    if (!path.trim()) {
-      return "Folder path is required";
+  const validateFolderName = (name: string): string | null => {
+    if (!name.trim()) {
+      return "Folder name is required";
     }
 
-    let cleanPath = path.trim();
+    const cleanName = name.trim();
 
-    // Ensure it starts with /
-    if (!cleanPath.startsWith("/")) {
-      cleanPath = "/" + cleanPath;
+    // Check for invalid characters (no slashes allowed in names)
+    if (cleanName.includes('/')) {
+      return "Folder name cannot contain slashes";
     }
 
-    // Remove trailing slash unless it's root
-    if (cleanPath !== "/" && cleanPath.endsWith("/")) {
-      cleanPath = cleanPath.slice(0, -1);
+    if (!/^[a-zA-Z0-9_\-\s]+$/.test(cleanName)) {
+      return "Folder name contains invalid characters. Use only letters, numbers, spaces, hyphens, and underscores.";
     }
 
-    // Check for invalid characters
-    if (!/^\/[a-zA-Z0-9_\-\/\s]*$/.test(cleanPath)) {
-      return "Folder path contains invalid characters. Use only letters, numbers, spaces, hyphens, and underscores.";
+    // Check if folder already exists in the selected parent
+    const existsInParent = allFolders.some(folder =>
+      folder.name === cleanName && folder.parentId === parentId
+    );
+
+    if (existsInParent) {
+      return "A folder with this name already exists in the selected parent folder";
     }
 
-    // Check if folder already exists
-    if (allFolders.includes(cleanPath)) {
-      return "A folder with this path already exists";
-    }
 
-    // Check for empty folder names
-    const parts = cleanPath.split("/").filter(Boolean);
-    if (parts.some((part) => !part.trim())) {
-      return "Folder names cannot be empty";
-    }
 
     return null;
   };
 
   const performSave = async () => {
-    const validationError = validateFolderPath(folderPath);
+    const validationError = validateFolderName(folderName);
     if (validationError) {
       setError(validationError);
       throw new Error(validationError);
     }
 
-    let cleanPath = folderPath.trim();
-
-    // Ensure it starts with /
-    if (!cleanPath.startsWith("/")) {
-      cleanPath = "/" + cleanPath;
-    }
-
-    // Remove trailing slash unless it's root
-    if (cleanPath !== "/" && cleanPath.endsWith("/")) {
-      cleanPath = cleanPath.slice(0, -1);
-    }
+    const cleanName = folderName.trim();
 
     try {
-      await onSave(cleanPath);
-      markClean({ folderPath: cleanPath }); // Mark form as clean after successful save
+      await onSave(cleanName, parentId);
+      markClean({ folderName: cleanName, parentId }); // Mark form as clean after successful save
     } catch (error) {
       console.error("Failed to create folder:", error);
       setError("Failed to create folder. Please try again.");
@@ -120,64 +106,49 @@ export const AddFolderModal = forwardRef<AddFolderModalRef, AddFolderModalProps>
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label
-          htmlFor="folderPath"
+          htmlFor="folderName"
           className="block text-sm font-medium text-gray-300 mb-1"
         >
-          Folder Path *
+          Folder Name *
         </label>
         <input
           type="text"
-          id="folderPath"
-          value={folderPath}
-          onChange={(e) => setFolderPath(e.target.value)}
+          id="folderName"
+          value={folderName}
+          onChange={(e) => setFolderName(e.target.value)}
           className={`w-full px-3 py-2 bg-gray-700 border rounded text-white text-sm focus:outline-none focus:border-blue-500 ${
             error ? "border-red-500" : "border-gray-600"
           }`}
-          placeholder="e.g., /Combat/Offensive or /Utility"
+          placeholder="e.g., Combat, Offensive, Utility"
           disabled={loading}
           autoFocus
         />
         {error && <p className="mt-1 text-sm text-red-400">{error}</p>}
-        <p className="mt-1 text-xs text-gray-500">
-          Use forward slashes (/) to create nested folders. Example:
-          /Combat/Offensive
-        </p>
       </div>
 
-      <div className="bg-gray-800 border border-gray-600 rounded p-3">
-        <h4 className="text-sm font-medium text-gray-300 mb-2">Examples:</h4>
-        <ul className="text-xs text-gray-400 space-y-1">
-          <li>
-            <code>/Combat</code> - Creates a Combat folder
-          </li>
-          <li>
-            <code>/Combat/Offensive</code> - Creates Offensive folder inside
-            Combat
-          </li>
-          <li>
-            <code>/Utility/Divination</code> - Creates nested folders
-          </li>
-        </ul>
+      <div>
+        <label
+          htmlFor="parentFolder"
+          className="block text-sm font-medium text-gray-300 mb-1"
+        >
+          Parent Folder
+        </label>
+        <select
+          id="parentFolder"
+          value={parentId}
+          onChange={(e) => setParentId(Number(e.target.value))}
+          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
+          disabled={loading}
+        >
+          {allFolders.map((folder) => (
+            <option key={folder.id} value={folder.id}>
+              {folder.path === "/" ? "/ (root)" : folder.path}
+            </option>
+          ))}
+        </select>
       </div>
 
-      {allFolders.length > 0 && (
-        <div className="bg-gray-800 border border-gray-600 rounded p-3">
-          <h4 className="text-sm font-medium text-gray-300 mb-2">
-            Existing Folders:
-          </h4>
-          <div className="max-h-32 overflow-y-auto">
-            <ul className="text-xs text-gray-400 space-y-1">
-              {allFolders
-                .filter((f) => f !== "/")
-                .map((folder) => (
-                  <li key={folder}>
-                    <code>{folder}</code>
-                  </li>
-                ))}
-            </ul>
-          </div>
-        </div>
-      )}
+
 
       <div className="flex justify-end gap-3 pt-4">
         <button
@@ -190,7 +161,7 @@ export const AddFolderModal = forwardRef<AddFolderModalRef, AddFolderModalProps>
         </button>
         <button
           type="submit"
-          disabled={loading || !folderPath.trim()}
+          disabled={loading || !folderName.trim()}
           className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded text-sm transition-colors"
         >
           {loading ? "Creating..." : "Create Folder"}

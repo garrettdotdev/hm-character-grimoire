@@ -1,5 +1,4 @@
-import { Spell } from "../models/Spell.js";
-import { Character } from "../models/Character.js";
+import { Spell, Character } from "@repo/types";
 import { database } from "./database.js";
 
 export class DataStore {

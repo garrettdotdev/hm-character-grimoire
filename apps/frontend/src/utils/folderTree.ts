@@ -1,102 +1,87 @@
-import type { Spell } from "@repo/types";
+import type { Spell, FolderWithPath } from "@repo/types";
 
 export interface FolderNode {
+  id: number;
   name: string;
   path: string;
+  parentId: number | null;
   children: FolderNode[];
   spells: Spell[];
   isExpanded: boolean;
 }
 
 export interface FolderTreeState {
-  [path: string]: boolean; // expanded state for each folder
+  [folderId: number]: boolean; // expanded state for each folder by ID
 }
 
 /**
- * Builds a hierarchical folder tree from a flat list of spells and empty folders
+ * Builds a hierarchical folder tree from normalized folder data and spells
  */
 export function buildFolderTree(
+  folders: FolderWithPath[],
   spells: Spell[],
   expandedState: FolderTreeState = {},
-  emptyFolders: string[] = [],
 ): FolderNode {
-  const root: FolderNode = {
-    name: "",
-    path: "/",
-    children: [],
-    spells: [],
-    isExpanded: true,
-  };
+  // Find the root folder (parentId === null)
+  const rootFolder = folders.find(f => f.parentId === null);
+  if (!rootFolder) {
+    throw new Error('Root folder not found');
+  }
 
-  // Group spells by folder path
-  const folderMap = new Map<string, Spell[]>();
-
+  // Group spells by folder ID
+  const spellsByFolderId = new Map<number, Spell[]>();
   spells.forEach((spell) => {
-    const folderPath = spell.folderPath || "/";
-    if (!folderMap.has(folderPath)) {
-      folderMap.set(folderPath, []);
+    const folderId = spell.folderId;
+    if (!spellsByFolderId.has(folderId)) {
+      spellsByFolderId.set(folderId, []);
     }
-    folderMap.get(folderPath)!.push(spell);
+    spellsByFolderId.get(folderId)!.push(spell);
   });
 
-  // Get all unique folder paths (from spells and empty folders) and sort them
-  const spellFolderPaths = Array.from(folderMap.keys());
-  const allPaths = Array.from(
-    new Set([...spellFolderPaths, ...emptyFolders]),
-  ).sort();
+  // Convert FolderWithPath to FolderNode recursively
+  const convertToFolderNode = (folder: FolderWithPath): FolderNode => {
+    const node: FolderNode = {
+      id: folder.id,
+      name: folder.name,
+      path: folder.path,
+      parentId: folder.parentId,
+      children: [],
+      spells: spellsByFolderId.get(folder.id) || [],
+      isExpanded: expandedState[folder.id] ?? (folder.id === rootFolder.id), // Root is expanded by default
+    };
 
-  // Build the tree structure
-  const nodeMap = new Map<string, FolderNode>();
-  nodeMap.set("/", root);
-
-  allPaths.forEach((path) => {
-    if (path === "/") {
-      // Root level spells
-      root.spells = folderMap.get(path) || [];
-      return;
+    // Convert children recursively
+    if (folder.children) {
+      node.children = folder.children
+        .map(convertToFolderNode)
+        .sort((a, b) => a.name.localeCompare(b.name));
     }
 
-    // Create nodes for this path and all parent paths
-    const pathParts = path.split("/").filter(Boolean);
-    let currentPath = "";
-
-    pathParts.forEach((part) => {
-      const parentPath = currentPath || "/";
-      currentPath = currentPath + "/" + part;
-
-      if (!nodeMap.has(currentPath)) {
-        const node: FolderNode = {
-          name: part,
-          path: currentPath,
-          children: [],
-          spells: [],
-          isExpanded: expandedState[currentPath] ?? false,
-        };
-
-        nodeMap.set(currentPath, node);
-
-        // Add to parent
-        const parent = nodeMap.get(parentPath)!;
-        parent.children.push(node);
-      }
-    });
-
-    // Add spells to the final node
-    const finalNode = nodeMap.get(path);
-    if (finalNode) {
-      finalNode.spells = folderMap.get(path) || [];
-    }
-  });
-
-  // Sort children at each level
-  const sortNode = (node: FolderNode) => {
-    node.children.sort((a, b) => a.name.localeCompare(b.name));
+    // Sort spells
     node.spells.sort((a, b) => a.name.localeCompare(b.name));
-    node.children.forEach(sortNode);
+
+    return node;
   };
 
-  sortNode(root);
-  return root;
+  return convertToFolderNode(rootFolder);
+}
+
+/**
+ * Gets all folder IDs from the tree (excluding root)
+ */
+export function getAllFolderIds(
+  node: FolderNode,
+  ids: number[] = [],
+): number[] {
+  if (node.parentId !== null) { // Not root
+    ids.push(node.id);
+  }
+
+  node.children.forEach((child) => {
+    getAllFolderIds(child, ids);
+  });
+
+  return ids;
 }
 
 /**
@@ -118,7 +103,28 @@ export function getAllFolderPaths(
 }
 
 /**
- * Checks if a folder path is empty (has no spells and no children with spells)
+ * Finds a folder node by ID
+ */
+export function findFolderById(
+  node: FolderNode,
+  id: number,
+): FolderNode | null {
+  if (node.id === id) {
+    return node;
+  }
+
+  for (const child of node.children) {
+    const found = findFolderById(child, id);
+    if (found) {
+      return found;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Checks if a folder is empty (has no spells and no children with spells)
  */
 export function isFolderEmpty(node: FolderNode): boolean {
   if (node.spells.length > 0) {
@@ -129,53 +135,58 @@ export function isFolderEmpty(node: FolderNode): boolean {
 }
 
 /**
- * Gets the parent path of a given path
+ * Gets the parent folder ID for a given folder
  */
-export function getParentPath(path: string): string {
-  if (path === "/") return "/";
-
-  const lastSlash = path.lastIndexOf("/");
-  if (lastSlash === 0) return "/";
-
-  return path.substring(0, lastSlash);
+export function getParentId(node: FolderNode): number | null {
+  return node.parentId;
 }
 
 /**
- * Validates a folder path
+ * Validates a folder name
  */
-export function isValidFolderPath(path: string): boolean {
-  if (!path) return false;
-  if (path === "/") return true;
+export function isValidFolderName(name: string): boolean {
+  if (!name || !name.trim()) return false;
 
-  // Must start with /
-  if (!path.startsWith("/")) return false;
+  // Must not contain slashes
+  if (name.includes('/')) return false;
 
-  // Must not end with / (unless root)
-  if (path.endsWith("/")) return false;
+  // Must not be just whitespace
+  if (!name.trim()) return false;
 
-  // Must not have empty segments
-  const segments = path.split("/").filter(Boolean);
-  if (segments.some((segment) => !segment.trim())) return false;
-
-  // Must not have invalid characters (basic check)
-  if (path.includes("//")) return false;
+  // Basic length check
+  if (name.length > 255) return false;
 
   return true;
 }
 
 /**
- * Creates a new folder path by combining parent and name
+ * Gets all ancestor folder IDs for a given folder
  */
-export function createFolderPath(
-  parentPath: string,
-  folderName: string,
-): string {
-  const cleanName = folderName.trim();
-  if (!cleanName) return parentPath;
+export function getAncestorIds(
+  node: FolderNode,
+  targetId: number,
+  ancestors: number[] = [],
+): number[] {
+  const target = findFolderById(node, targetId);
+  if (!target) return ancestors;
 
-  if (parentPath === "/") {
-    return "/" + cleanName;
+  let current = target;
+  while (current.parentId !== null) {
+    ancestors.unshift(current.parentId);
+    current = findFolderById(node, current.parentId)!;
   }
 
-  return parentPath + "/" + cleanName;
+  return ancestors;
+}
+
+/**
+ * Checks if one folder is a descendant of another
+ */
+export function isDescendant(
+  rootNode: FolderNode,
+  ancestorId: number,
+  descendantId: number,
+): boolean {
+  const ancestors = getAncestorIds(rootNode, descendantId);
+  return ancestors.includes(ancestorId);
 }

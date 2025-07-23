@@ -1,11 +1,14 @@
-import { useState, useMemo, useEffect, useRef } from "react";
-import type { Spell } from "@repo/types";
+import { useState, useMemo, useRef } from "react";
+import type { Spell, FolderWithPath } from "@repo/types";
 import { FolderTreeNode } from "./FolderTreeNode";
 import { buildFolderTree, type FolderTreeState } from "../utils/folderTree";
 import { AddContextMenu } from "./AddContextMenu";
+import { DeleteFolderDialog } from "./DeleteFolderDialog";
+import { useFolderStore } from "../stores/folderStore";
 
 interface SpellSidebarProps {
   spells: Spell[];
+  folders: FolderWithPath[];
   selectedSpell: Spell | null;
   onSpellSelect: (spell: Spell) => void;
   onSpellsChange: () => void;
@@ -22,6 +25,7 @@ interface SpellSidebarProps {
 
 export function SpellSidebar({
   spells,
+  folders,
   selectedSpell,
   onSpellSelect,
   onSpellsChange,
@@ -35,59 +39,57 @@ export function SpellSidebar({
   loading,
   onUpdateSpell,
 }: SpellSidebarProps) {
+  const { deleteFolder, renameFolder } = useFolderStore();
   const [expandedFolders, setExpandedFolders] = useState<FolderTreeState>({
-    "/": true, // Root is always expanded
+    1: true, // Root folder (ID=1) is always expanded
   });
-  const [emptyFolders, setEmptyFolders] = useState<string[]>([]);
   const [showContextMenu, setShowContextMenu] = useState(false);
+  const [folderToDelete, setFolderToDelete] = useState<{ folderId: number; name: string } | null>(null);
+  const [deletingFolder, setDeletingFolder] = useState(false);
   const addButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Fetch empty folders
-  useEffect(() => {
-    const fetchFolders = async () => {
-      try {
-        const response = await fetch("/api/folders");
-        const data = await response.json();
-        setEmptyFolders(data.folders || []);
-      } catch (error) {
-        console.error("Failed to fetch folders:", error);
-      }
-    };
+  // No need to fetch empty folders separately - they're included in the folders prop // Refetch when spells change
 
-    fetchFolders();
-  }, [spells]); // Refetch when spells change
-
-  // Build the folder tree from spells and empty folders
+  // Build the folder tree from normalized folder data and spells
   const folderTree = useMemo(() => {
-    return buildFolderTree(spells, expandedFolders, emptyFolders);
-  }, [spells, expandedFolders, emptyFolders]);
+    if (folders.length === 0) {
+      // Return a minimal root node if no folders are loaded yet
+      return {
+        id: 1,
+        name: "",
+        path: "/",
+        parentId: null,
+        children: [],
+        spells: [],
+        isExpanded: true,
+      };
+    }
+    return buildFolderTree(folders, spells, expandedFolders);
+  }, [folders, spells, expandedFolders]);
 
-  const handleToggleFolder = (path: string) => {
+  const handleToggleFolder = (folderId: number) => {
     setExpandedFolders((prev) => ({
       ...prev,
-      [path]: !prev[path],
+      [folderId]: !prev[folderId],
     }));
   };
 
-  const handleMoveSpell = async (spellId: string, newFolderPath: string) => {
+  const handleMoveSpell = async (spellId: string, newFolderId: number) => {
     const spell = spells.find((s) => s.id === spellId);
     if (!spell || !onUpdateSpell) return;
 
-    const updatedSpell = { ...spell, folderPath: newFolderPath };
+    const updatedSpell = { ...spell, folderId: newFolderId };
     onUpdateSpell(updatedSpell);
   };
 
-  const handleMoveFolder = async (
-    sourcePath: string,
-    targetParentPath: string,
-  ) => {
+  const handleMoveFolder = async (folderId: number, newParentId: number | null) => {
     try {
       const response = await fetch("/api/folders/move", {
-        method: "PATCH",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ sourcePath, targetParentPath }),
+        body: JSON.stringify({ folderId, newParentId }),
       });
 
       if (!response.ok) {
@@ -101,28 +103,27 @@ export function SpellSidebar({
     }
   };
 
-  const handleCreateFolder = async (parentPath: string, folderName: string) => {
+  const handleCreateFolder = async (parentId: number, folderName: string) => {
     try {
-      const newFolderPath =
-        parentPath === "/" ? `/${folderName}` : `${parentPath}/${folderName}`;
-
       const response = await fetch("/api/folders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ folderPath: newFolderPath }),
+        body: JSON.stringify({ name: folderName, parentId }),
       });
 
       if (!response.ok) {
         throw new Error("Failed to create folder");
       }
 
+      const result = await response.json();
+
       // Expand the parent folder and the new folder
       setExpandedFolders((prev) => ({
         ...prev,
-        [parentPath]: true,
-        [newFolderPath]: true,
+        [parentId]: true,
+        [result.folderId]: true,
       }));
 
       // Refresh the spell list to pick up the new folder
@@ -132,53 +133,44 @@ export function SpellSidebar({
     }
   };
 
-  const handleRenameFolder = async (oldPath: string, newName: string) => {
-    // This would require updating all spells in this folder and subfolders
-    // For now, we'll implement this as a batch update
-    console.log("Rename folder:", oldPath, "to", newName);
+  const handleRenameFolder = async (folderId: number, newName: string) => {
     try {
-      const newPath = oldPath.replace(/\/[^/]*$/, `/${newName}`);
+      // Use the folder store instead of direct fetch
+      await renameFolder(folderId, newName);
 
-      const response = await fetch("/api/folders", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ oldPath, newPath }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to rename folder");
-      }
-
-      // Refresh the spell list to pick up the new folder
+      // Refresh the spell list to pick up the renamed folder
       onSpellsChange();
     } catch (error) {
       console.error("Failed to rename folder:", error);
     }
   };
 
-  const handleDeleteFolder = async (path: string) => {
-    // This would move all spells to the parent folder
-    console.log("Delete folder:", path);
+  const handleDeleteFolder = async (folderId: number, name: string) => {
+    setFolderToDelete({ folderId, name });
+  };
+
+  const handleConfirmDeleteFolder = async (strategy: 'move-to-parent' | 'recursive') => {
+    if (!folderToDelete) return;
+
     try {
-      const response = await fetch("/api/folders", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ folderPath: path }),
-      });
+      setDeletingFolder(true);
 
-      if (!response.ok) {
-        throw new Error("Failed to delete folder");
-      }
+      // Use the folder store instead of direct fetch
+      await deleteFolder(folderToDelete.folderId, strategy);
 
-      // Refresh the spell list to pick up the new folder
+      // Refresh the spell list to pick up the changes
       onSpellsChange();
+      setFolderToDelete(null);
     } catch (error) {
       console.error("Failed to delete folder:", error);
+      throw error; // Re-throw to let the dialog handle the error
+    } finally {
+      setDeletingFolder(false);
     }
+  };
+
+  const handleCancelDeleteFolder = () => {
+    setFolderToDelete(null);
   };
 
 
@@ -253,6 +245,17 @@ export function SpellSidebar({
           />
         )}
       </div>
+
+      {/* Delete Folder Dialog */}
+      {folderToDelete && (
+        <DeleteFolderDialog
+          folderId={folderToDelete.folderId}
+          folderName={folderToDelete.name}
+          onDelete={handleConfirmDeleteFolder}
+          onCancel={handleCancelDeleteFolder}
+          loading={deletingFolder}
+        />
+      )}
     </div>
   );
 }

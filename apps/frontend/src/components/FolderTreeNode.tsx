@@ -6,15 +6,15 @@ interface FolderTreeNodeProps {
   node: FolderNode;
   selectedSpell: Spell | null;
   onSpellSelect: (spell: Spell) => void;
-  onToggleFolder: (path: string) => void;
+  onToggleFolder: (folderId: number) => void;
   onAddSpellToCharacter?: (spell: Spell) => void;
   hasSelectedCharacter: boolean;
   level: number;
-  onCreateFolder?: (parentPath: string, folderName: string) => void;
-  onRenameFolder?: (path: string, newName: string) => void;
-  onDeleteFolder?: (path: string) => void;
-  onMoveSpell?: (spellId: string, newFolderPath: string) => void;
-  onMoveFolder?: (sourcePath: string, targetParentPath: string) => void;
+  onCreateFolder?: (parentId: number, folderName: string) => void;
+  onRenameFolder?: (folderId: number, newName: string) => void;
+  onDeleteFolder?: (folderId: number, name: string) => void;
+  onMoveSpell?: (spellId: string, newFolderId: number) => void;
+  onMoveFolder?: (folderId: number, newParentId: number | null) => void;
 }
 
 export function FolderTreeNode({
@@ -42,7 +42,7 @@ export function FolderTreeNode({
   const indentLevel = level * 16; // 16px per level
 
   const handleToggle = () => {
-    onToggleFolder(node.path);
+    onToggleFolder(node.id);
   };
 
   const handleSpellDragStart = (e: React.DragEvent, spell: Spell) => {
@@ -56,8 +56,9 @@ export function FolderTreeNode({
     e.stopPropagation(); // Prevent parent folder drag events
     setIsDragging(true);
     const folderData = {
-      path: node.path,
+      id: node.id,
       name: node.name,
+      path: node.path,
     };
     e.dataTransfer.setData("application/json", JSON.stringify(folderData));
     e.dataTransfer.setData("text/plain", "folder"); // Type identifier
@@ -90,14 +91,11 @@ export function FolderTreeNode({
 
       if (dragType === "spell" && dragData.id && onMoveSpell) {
         // Moving a spell to this folder
-        onMoveSpell(dragData.id, node.path);
-      } else if (dragType === "folder" && dragData.path && onMoveFolder) {
+        onMoveSpell(dragData.id, node.id);
+      } else if (dragType === "folder" && dragData.id && onMoveFolder) {
         // Moving a folder to this folder
-        if (
-          dragData.path !== node.path &&
-          !node.path.startsWith(dragData.path + "/")
-        ) {
-          onMoveFolder(dragData.path, node.path);
+        if (dragData.id !== node.id) {
+          onMoveFolder(dragData.id, node.id);
         }
       }
     } catch (error) {
@@ -107,7 +105,7 @@ export function FolderTreeNode({
 
   const handleRename = () => {
     if (renameValue.trim() && renameValue !== node.name && onRenameFolder) {
-      onRenameFolder(node.path, renameValue.trim());
+      onRenameFolder(node.id, renameValue.trim());
     }
     setIsRenaming(false);
     setRenameValue(node.name);
@@ -115,20 +113,15 @@ export function FolderTreeNode({
 
   const handleCreateSubfolder = () => {
     if (newFolderName.trim() && onCreateFolder) {
-      onCreateFolder(node.path, newFolderName.trim());
+      onCreateFolder(node.id, newFolderName.trim());
     }
     setIsCreatingSubfolder(false);
     setNewFolderName("");
   };
 
   const handleDelete = () => {
-    if (
-      onDeleteFolder &&
-      confirm(
-        `Delete folder "${node.name}" and move all spells to parent folder?`,
-      )
-    ) {
-      onDeleteFolder(node.path);
+    if (onDeleteFolder) {
+      onDeleteFolder(node.id, node.name);
     }
     setShowContextMenu(false);
   };
@@ -291,7 +284,7 @@ export function FolderTreeNode({
           {/* Child Folders */}
           {node.children.map((child) => (
             <FolderTreeNode
-              key={child.path}
+              key={child.id}
               node={child}
               selectedSpell={selectedSpell}
               onSpellSelect={onSpellSelect}

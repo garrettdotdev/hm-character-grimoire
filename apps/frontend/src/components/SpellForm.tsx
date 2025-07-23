@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { type BonusEffect, type Spell, SpellConvocation } from "@repo/types";
+import { type BonusEffect, type Spell, SpellConvocation, type FolderWithPath } from "@repo/types";
 import { FolderPicker } from "./FolderPicker";
 import { RichTextEditor } from "./RichTextEditor";
 import { BonusEffectEditor } from "./BonusEffectEditor";
@@ -12,7 +12,7 @@ interface SpellFormProps {
   initialData?: Omit<Spell, "id">;
   mode?: "create" | "edit";
   onDirtyChange?: (isDirty: boolean) => void;
-  allSpells?: Spell[]; // For extracting existing folder paths
+  folders?: FolderWithPath[]; // Available folders for selection
 }
 
 export function SpellForm({
@@ -21,7 +21,7 @@ export function SpellForm({
   loading = false,
   initialData,
   mode = "create",
-  allSpells = [],
+  folders = [],
   onDirtyChange,
 }: SpellFormProps) {
   const [formData, setFormData] = useState({
@@ -33,7 +33,7 @@ export function SpellForm({
     castingTime: initialData?.castingTime || "",
     range: initialData?.range || "",
     duration: initialData?.duration || "",
-    folderPath: initialData?.folderPath || "/",
+    folderId: initialData?.folderId || 1, // Default to root folder
     sourceBook: initialData?.sourceBook || "",
     sourcePage: initialData?.sourcePage || 0,
   });
@@ -49,7 +49,7 @@ export function SpellForm({
     castingTime: initialData?.castingTime || "",
     range: initialData?.range || "",
     duration: initialData?.duration || "",
-    folderPath: initialData?.folderPath || "/",
+    folderId: initialData?.folderId || 1, // Default to root folder
     sourceBook: initialData?.sourceBook || "",
     sourcePage: initialData?.sourcePage || 0,
   };
@@ -73,17 +73,14 @@ export function SpellForm({
         castingTime: initialData.castingTime || "",
         range: initialData.range || "",
         duration: initialData.duration || "",
-        folderPath: initialData.folderPath || "/",
+        folderId: initialData.folderId || 1, // Default to root folder
         sourceBook: initialData.sourceBook || "",
         sourcePage: initialData.sourcePage || 0,
       });
     }
   }, [initialData]);
 
-  // Extract existing folder paths from all spells
-  const existingFolders = allSpells
-    .map((spell) => spell.folderPath)
-    .filter(Boolean);
+  // Folders are now passed as a prop
 
   const convocationOptions = Object.values(SpellConvocation);
 
@@ -355,13 +352,13 @@ export function SpellForm({
         </p>
       </div>
 
-      {/* Folder Path field */}
+      {/* Folder field */}
       <div>
         <FolderPicker
-          value={formData.folderPath}
-          onChange={(folderPath) => handleChange("folderPath", folderPath)}
+          value={formData.folderId}
+          onChange={(folderId) => handleChange("folderId", folderId)}
           disabled={loading}
-          allFolders={existingFolders}
+          folders={folders}
         />
       </div>
 

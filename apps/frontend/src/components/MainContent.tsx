@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { type Character, type Spell, SpellConvocation } from "@repo/types";
 import { SpellCard } from "./SpellCard";
 import { SpellDetailsModal } from "./SpellDetailsModal.tsx";
+import { api } from "../services/api.js";
 
 interface MainContentProps {
   selectedCharacter: Character | null;
@@ -44,9 +45,8 @@ export function MainContent({
   const fetchCharacterSpells = async (characterId: string) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/characters/${characterId}/spells`);
-      const data = await response.json();
-      setSpells(data.spells || []);
+      const spells = await api.getCharacterSpells(characterId);
+      setSpells(spells || []);
     } catch (error) {
       console.error("Failed to fetch character spells:", error);
       setSpells([]);

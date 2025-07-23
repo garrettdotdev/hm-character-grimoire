@@ -1,6 +1,5 @@
 import sqlite3 from "sqlite3";
-import { Spell, SpellConvocation, BonusEffect } from "../models/Spell.js";
-import { Character, CharacterRank } from "../models/Character.js";
+import { Spell, SpellConvocation, BonusEffect, Character, CharacterRank } from "@repo/types";
 
 export class Database {
   private db: sqlite3.Database;
@@ -512,7 +511,7 @@ export class Database {
       castingTime: row.casting_time,
       range: row.range,
       duration: row.duration,
-      folderPath: row.folder_path || "/",
+      folderId: row.folder_id || 1, // Default to root folder
       sourceBook: row.source_book || "",
       sourcePage: row.source_page || 0,
     };

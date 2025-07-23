@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Folder {
+  id        Int      @id @default(autoincrement())
+  name      String
+  parentId  Int?     @map("parent_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  parent    Folder?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Folder[] @relation("FolderHierarchy")
+  spells    Spell[]
+
+  @@unique([parentId, name])
+  @@map("folders")
+}
+
+model Spell {
+  id              String      @id
+  name            String
+  convocation     String
+  complexityLevel Int         @map("complexity_level")
+  description     String
+  bonusEffects    String      @map("bonus_effects")
+  castingTime     String      @map("casting_time")
+  range           String
+  duration        String
+  folderId        Int         @map("folder_id")
+  sourceBook      String      @default("") @map("source_book")
+  sourcePage      Int         @default(0) @map("source_page")
+  folder          Folder      @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  characters      Character[] @relation("CharacterSpells")
+
+  @@map("spells")
+}
+
+model Character {
+  id           String  @id
+  name         String
+  convocations String
+  rank         String
+  game         String
+  spells       Spell[] @relation("CharacterSpells")
+
+  @@map("characters")
+}

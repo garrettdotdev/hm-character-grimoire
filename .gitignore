@@ -117,9 +117,8 @@ src-tauri/target/
 src-tauri/Cargo.lock
 
 # Database files
-*.db
-*.sqlite
-*.sqlite3
+*.db.*
+old.*.db*
 
 # Temporary files
 tmp/
@@ -132,3 +131,5 @@ temp/
 *.crt
 *.p12
 *.pfx
+
+/src/generated/prisma
