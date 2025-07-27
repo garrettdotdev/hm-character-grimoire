@@ -2820,9 +2820,9 @@ declare type QueryMiddlewareParams = {
     model?: string;
     /** The action that is being handled */
     action: Action;
-    /** The arguments being passed into the action */
+    /** TODO what is this */
     dataPath: string[];
-    /** Whether the query is running in a transaction */
+    /** TODO what is this */
     runInTransaction: boolean;
     args?: UserArgs_2;
 };

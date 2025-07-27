@@ -152,6 +152,36 @@ export class PrismaSpellRepository implements ISpellRepository {
             convocation: {
               contains: query
             }
+          },
+          {
+            bonusEffects: {
+              contains: query
+            }
+          },
+          {
+            castingTime: {
+              contains: query
+            }
+          },
+          {
+            range: {
+              contains: query
+            }
+          },
+          {
+            duration: {
+              contains: query
+            }
+          },
+          {
+            sourceBook: {
+              contains: query
+            }
+          },
+          {
+            sourcePage: {
+              contains: query
+            }
           }
         ]
       },

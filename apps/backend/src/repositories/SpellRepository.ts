@@ -124,8 +124,10 @@ export class SpellRepository extends BaseRepository implements ISpellRepository 
     const rows = await this.runQueryAll<SpellRow>(
       `SELECT * FROM spells
        WHERE name LIKE ? OR description LIKE ? OR convocation LIKE ?
+       OR bonus_effects LIKE ? OR casting_time LIKE ? OR range LIKE ?
+       OR duration LIKE ? OR source_book LIKE ? OR source_page LIKE ?
        ORDER BY name`,
-      [`%${query}%`, `%${query}%`, `%${query}%`]
+      [`%${query}%`, `%${query}%`, `%${query}%`, `%${query}%`, `%${query}%`, `%${query}%`, `%${query}%`, `%${query}%`, `%${query}%`]
     );
     return rows.map(this.mapRowToSpell);
   }

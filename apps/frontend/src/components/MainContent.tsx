@@ -59,10 +59,26 @@ export function MainContent({
     let filtered = spells;
 
     if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(
-        (spell) =>
-          spell.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          spell.description.toLowerCase().includes(searchTerm.toLowerCase()),
+        (spell) => {
+          // Search in basic fields
+          const basicMatch =
+            spell.name.toLowerCase().includes(searchLower) ||
+            spell.description.toLowerCase().includes(searchLower) ||
+            spell.castingTime.toLowerCase().includes(searchLower) ||
+            spell.range.toLowerCase().includes(searchLower) ||
+            spell.duration.toLowerCase().includes(searchLower) ||
+            spell.sourceBook.toLowerCase().includes(searchLower) ||
+            spell.sourcePage.toLowerCase().includes(searchLower);
+
+          // Search in bonus effects
+          const bonusEffectsMatch = spell.bonusEffects.some(effect =>
+            effect.effectsDescription.toLowerCase().includes(searchLower)
+          );
+
+          return basicMatch || bonusEffectsMatch;
+        }
       );
     }
 
