@@ -41,10 +41,27 @@ export class SpellController {
 
   importSpells = asyncHandler(async (req: ValidatedRequest<SpellImportRequest>, res: Response) => {
     const result = await this.spellService.importSpells(req.body.spells);
-    res.status(201).json({
+
+    const response: any = {
       message: `Successfully imported ${result.importedCount} spells`,
       importedCount: result.importedCount,
-    });
+      totalAttempted: req.body.spells.length,
+    };
+
+    if (result.errors && result.errors.length > 0) {
+      response.errors = result.errors;
+      response.errorCount = result.errors.length;
+
+      if (result.importedCount === 0) {
+        response.message = `Failed to import any spells. ${result.errors.length} errors occurred.`;
+        return res.status(400).json(response);
+      } else {
+        response.message = `Partially successful: imported ${result.importedCount} spells, ${result.errors.length} failed.`;
+        return res.status(207).json(response); // 207 Multi-Status for partial success
+      }
+    }
+
+    res.status(201).json(response);
   });
 
   moveSpell = asyncHandler(async (

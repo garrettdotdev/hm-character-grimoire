@@ -47,6 +47,22 @@ export class SpellRepository extends BaseRepository implements ISpellRepository 
     return rows.map(this.mapRowToSpell);
   }
 
+  async findByName(name: string): Promise<Spell[]> {
+    const rows = await this.runQueryAll<SpellRow>(
+      'SELECT * FROM spells WHERE name LIKE ? ORDER BY name',
+      [`%${name}%`]
+    );
+    return rows.map(this.mapRowToSpell);
+  }
+
+  async findByExactName(name: string): Promise<Spell | null> {
+    const row = await this.runQuery<SpellRow>(
+      'SELECT * FROM spells WHERE name = ?',
+      [name]
+    );
+    return row ? this.mapRowToSpell(row) : null;
+  }
+
   async findByFolderId(folderId: number): Promise<Spell[]> {
     const rows = await this.runQueryAll<SpellRow>(
       'SELECT * FROM spells WHERE folder_id = ? ORDER BY name',

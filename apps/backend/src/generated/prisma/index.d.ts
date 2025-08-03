@@ -4793,10 +4793,10 @@ export namespace Prisma {
 
   export type SpellWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    name?: string
     AND?: SpellWhereInput | SpellWhereInput[]
     OR?: SpellWhereInput[]
     NOT?: SpellWhereInput | SpellWhereInput[]
-    name?: StringFilter<"Spell"> | string
     convocation?: StringFilter<"Spell"> | string
     complexityLevel?: IntFilter<"Spell"> | number
     description?: StringFilter<"Spell"> | string
@@ -4809,7 +4809,7 @@ export namespace Prisma {
     sourcePage?: StringFilter<"Spell"> | string
     folder?: XOR<FolderScalarRelationFilter, FolderWhereInput>
     characters?: CharacterListRelationFilter
-  }, "id">
+  }, "id" | "name">
 
   export type SpellOrderByWithAggregationInput = {
     id?: SortOrder

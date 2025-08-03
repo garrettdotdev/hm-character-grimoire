@@ -47,6 +47,17 @@ export class PrismaSpellRepository implements ISpellRepository {
     return spells.map(this.mapToSpell);
   }
 
+  async findByExactName(name: string): Promise<Spell | null> {
+    const spell = await this.prisma.spell.findFirst({
+      where: {
+        name: {
+          equals: name
+        }
+      }
+    });
+    return spell ? this.mapToSpell(spell) : null;
+  }
+
   async findByConvocation(convocation: SpellConvocation): Promise<Spell[]> {
     const spells = await this.prisma.spell.findMany({
       where: { convocation },

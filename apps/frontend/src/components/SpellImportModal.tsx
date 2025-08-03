@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useFormDirty } from "../hooks/useFormDirty";
+import { useErrorHandler } from "../hooks/useErrorHandler";
+import { ErrorModal } from "./ErrorModal";
 
 interface SpellImportModalProps {
   onImport: (spells: any[]) => Promise<void>;
@@ -22,6 +24,9 @@ export function SpellImportModal({
   // Dirty state tracking
   const initialFormData = { selectedFile: null as File | null, previewData: null as any[] | null };
   const { isDirty, updateData, markClean } = useFormDirty(initialFormData);
+
+  // Error handling
+  const { errorInfo, showErrorModal, handleApiError, clearError } = useErrorHandler();
 
   // Notify parent of dirty state changes
   useEffect(() => {
@@ -93,7 +98,7 @@ export function SpellImportModal({
       markClean({ selectedFile: null, previewData: null }); // Mark form as clean after successful import
     } catch (error) {
       console.error("Import failed:", error);
-      setError("Import failed. Please check the file format and try again.");
+      handleApiError(error as any, "Failed to import spells");
     }
   };
 
@@ -107,6 +112,7 @@ export function SpellImportModal({
   };
 
   return (
+    <>
     <div className="space-y-4">
       {/* File Selection */}
       <div>
@@ -230,5 +236,16 @@ export function SpellImportModal({
         </button>
       </div>
     </div>
+
+    {/* Error Modal */}
+    {errorInfo && (
+      <ErrorModal
+        isOpen={showErrorModal}
+        onClose={clearError}
+        error={errorInfo}
+        title="Import Error"
+      />
+    )}
+  </>
   );
 }

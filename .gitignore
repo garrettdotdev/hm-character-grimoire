@@ -117,6 +117,7 @@ src-tauri/target/
 src-tauri/Cargo.lock
 
 # Database files
+*.db
 *.db.*
 old.*.db*
 

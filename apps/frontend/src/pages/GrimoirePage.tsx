@@ -11,6 +11,7 @@ import { SpellForm } from "../components/SpellForm.js";
 import { DeleteSpellDialog } from "../components/DeleteSpellDialog.js";
 import { SpellImportModal } from "../components/SpellImportModal.js";
 import { AddFolderModal, type AddFolderModalRef } from "../components/AddFolderModal.js";
+import { ErrorTestModal } from "../components/ErrorTestModal.js";
 import { useCharacters } from "../hooks/useCharacters.js";
 import { useSpells } from "../hooks/useSpells.js";
 import { useFolderStore } from "../stores/folderStore.js";
@@ -29,6 +30,7 @@ export function GrimoirePage() {
   const [showDeleteSpellModal, setShowDeleteSpellModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showAddFolderModal, setShowAddFolderModal] = useState(false);
+  const [showErrorTestModal, setShowErrorTestModal] = useState(false);
 
   // Form loading states
   const [characterFormLoading, setCharacterFormLoading] = useState(false);
@@ -381,6 +383,24 @@ export function GrimoirePage() {
             onDirtyChange={setAddFolderDirty}
           />
         </ProtectedModal>
+      )}
+
+      {/* Error Test Modal (Development Only) */}
+      {import.meta.env.DEV && (
+        <>
+          <button
+            onClick={() => setShowErrorTestModal(true)}
+            className="fixed bottom-4 right-4 bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-lg z-40"
+            title="Test Error Handling (Dev Only)"
+          >
+            🧪 Test Errors
+          </button>
+
+          <ErrorTestModal
+            isOpen={showErrorTestModal}
+            onClose={() => setShowErrorTestModal(false)}
+          />
+        </>
       )}
     </div>
   );

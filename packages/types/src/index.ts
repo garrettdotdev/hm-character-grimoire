@@ -130,12 +130,17 @@ export interface FoldersResponse {
   folders: FolderWithPath[];
 }
 
+export interface ImportError {
+  spell: any;
+  error: string;
+}
+
 export interface ImportResponse {
   message: string;
   importedCount: number;
-  validCount?: number;
-  totalCount?: number;
-  details?: string[];
+  totalAttempted: number;
+  errorCount?: number;
+  errors?: ImportError[];
 }
 
 // Utility types

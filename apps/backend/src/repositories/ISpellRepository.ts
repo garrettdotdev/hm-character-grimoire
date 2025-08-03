@@ -4,6 +4,8 @@ export interface ISpellRepository {
   findAll(): Promise<Spell[]>;
   findById(id: string): Promise<Spell | null>;
   findByIds(ids: string[]): Promise<Spell[]>;
+  findByName(name: string): Promise<Spell[]>;
+  findByExactName(name: string): Promise<Spell | null>;
   findByFolderId(folderId: number): Promise<Spell[]>;
   create(spell: Spell): Promise<void>;
   update(spell: Spell): Promise<void>;

@@ -37,6 +37,7 @@ model Spell {
   folder          Folder      @relation(fields: [folderId], references: [id], onDelete: Cascade)
   characters      Character[] @relation("CharacterSpells")
 
+  @@unique([name])
   @@map("spells")
 }
 

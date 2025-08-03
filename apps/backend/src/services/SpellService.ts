@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { Spell, CreateSpellRequest, UpdateSpellRequest } from '@repo/types';
 import type { ISpellRepository } from '../repositories/ISpellRepository.js';
 import type { IFolderRepository } from '../repositories/IFolderRepository.js';
-import { AppError } from '../middleware/errorHandler.js';
+import { AppError, ConflictError, NotFoundError } from '../middleware/errorHandler.js';
 import { TransactionService } from './TransactionService.js';
 
 export class SpellService {
@@ -32,7 +32,17 @@ export class SpellService {
     const folderId = data.folderId || 1;
     const folderExists = await this.folderRepository.exists(folderId);
     if (!folderExists) {
-      throw new AppError('Folder not found', 404);
+      throw new NotFoundError('Folder not found', { folderId });
+    }
+
+    // Check if spell with same name already exists
+    const existingSpell = await this.spellRepository.findByExactName(data.name);
+    if (existingSpell) {
+      throw new ConflictError(`A spell with the name "${data.name}" already exists`, {
+        field: 'name',
+        value: data.name,
+        existingSpellId: existingSpell.id,
+      });
     }
 
     const spell: Spell = {
@@ -50,33 +60,79 @@ export class SpellService {
       sourcePage: data.sourcePage || '',
     };
 
-    await this.spellRepository.create(spell);
-    return spell;
+    try {
+      await this.spellRepository.create(spell);
+      return spell;
+    } catch (error) {
+      // Handle database-level constraint violations as a fallback
+      if (error instanceof Error && error.message.includes('UNIQUE constraint failed')) {
+        throw new ConflictError(`A spell with the name "${data.name}" already exists`, {
+          field: 'name',
+          value: data.name,
+        });
+      }
+      throw error;
+    }
   }
 
   async updateSpell(id: string, data: UpdateSpellRequest): Promise<Spell> {
     const existingSpell = await this.getSpellById(id);
-    
+
+    // Validate folder exists if provided
+    if (data.folderId !== undefined) {
+      const folderExists = await this.folderRepository.exists(data.folderId);
+      if (!folderExists) {
+        throw new NotFoundError('Folder not found', { folderId: data.folderId });
+      }
+    }
+
+    // Check if spell name is being changed and if it conflicts with existing spell
+    if (data.name && data.name !== existingSpell.name) {
+      const conflictingSpell = await this.spellRepository.findByExactName(data.name);
+      if (conflictingSpell) {
+        throw new ConflictError(`A spell with the name "${data.name}" already exists`, {
+          field: 'name',
+          value: data.name,
+          existingSpellId: conflictingSpell.id,
+        });
+      }
+    }
+
     const updatedSpell: Spell = {
       ...existingSpell,
       ...data,
       id, // Ensure ID cannot be changed
     };
 
-    await this.spellRepository.update(updatedSpell);
-    return updatedSpell;
+    try {
+      await this.spellRepository.update(updatedSpell);
+      return updatedSpell;
+    } catch (error) {
+      // Handle database-level constraint violations as a fallback
+      if (error instanceof Error && error.message.includes('UNIQUE constraint failed')) {
+        throw new ConflictError(`A spell with the name "${updatedSpell.name}" already exists`, {
+          field: 'name',
+          value: updatedSpell.name,
+        });
+      }
+      throw error;
+    }
   }
 
   async deleteSpell(id: string): Promise<void> {
     const spell = await this.spellRepository.findById(id);
     if (!spell) {
-      throw new AppError('Spell not found', 404);
+      throw new NotFoundError('Spell not found', { spellId: id });
     }
 
     await this.spellRepository.delete(id);
   }
 
-  async importSpells(spells: CreateSpellRequest[]): Promise<{ importedCount: number; spells: Spell[] }> {
+  async importSpells(spells: CreateSpellRequest[]): Promise<{
+    importedCount: number;
+    spells: Spell[];
+    errors?: Array<{ spell: CreateSpellRequest; error: string }>
+  }> {
     if (spells.length === 0) {
       return { importedCount: 0, spells: [] };
     }
@@ -86,15 +142,64 @@ export class SpellService {
     for (const folderId of folderIds) {
       const exists = await this.folderRepository.exists(folderId);
       if (!exists) {
-        throw new AppError(`Folder with ID ${folderId} not found`, 404);
+        throw new NotFoundError(`Folder with ID ${folderId} not found`, { folderId });
       }
     }
 
-    // Import all spells in a single transaction
+    // Check for duplicate names within the import batch
+    const nameMap = new Map<string, number>();
+    const duplicatesInBatch: Array<{ spell: CreateSpellRequest; error: string }> = [];
+
+    spells.forEach((spell, index) => {
+      const existingIndex = nameMap.get(spell.name);
+      if (existingIndex !== undefined) {
+        duplicatesInBatch.push({
+          spell,
+          error: `Duplicate spell name "${spell.name}" found in import batch (first occurrence at position ${existingIndex + 1})`,
+        });
+      } else {
+        nameMap.set(spell.name, index);
+      }
+    });
+
+    // Check for existing spells in database
+    const existingSpellNames = new Set<string>();
+    for (const spellData of spells) {
+      const existing = await this.spellRepository.findByExactName(spellData.name);
+      if (existing) {
+        existingSpellNames.add(spellData.name);
+      }
+    }
+
+    const errors: Array<{ spell: CreateSpellRequest; error: string }> = [
+      ...duplicatesInBatch,
+      ...spells
+        .filter(spell => existingSpellNames.has(spell.name))
+        .map(spell => ({
+          spell,
+          error: `A spell with the name "${spell.name}" already exists in the database`,
+        })),
+    ];
+
+    // Filter out spells with errors
+    const validSpells = spells.filter(spell =>
+      !duplicatesInBatch.some(dup => dup.spell === spell) &&
+      !existingSpellNames.has(spell.name)
+    );
+
+    if (validSpells.length === 0) {
+      return {
+        importedCount: 0,
+        spells: [],
+        errors,
+      };
+    }
+
+    // Import valid spells in a single transaction
     const importedSpells = await this.transactionService.executeTransaction(async (tx) => {
       const results: Spell[] = [];
 
-      for (const spellData of spells) {
+      for (const spellData of validSpells) {
         const spell: Spell = {
           id: crypto.randomUUID(),
           name: spellData.name,
@@ -134,10 +239,16 @@ export class SpellService {
       return results;
     });
 
-    return {
+    const result: any = {
       importedCount: importedSpells.length,
       spells: importedSpells,
     };
+
+    if (errors.length > 0) {
+      result.errors = errors;
+    }
+
+    return result;
   }
 
   async getSpellsByIds(ids: string[]): Promise<Spell[]> {

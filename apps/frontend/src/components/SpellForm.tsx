@@ -4,6 +4,8 @@ import { FolderPicker } from "./FolderPicker";
 import { RichTextEditor } from "./RichTextEditor";
 import { BonusEffectEditor } from "./BonusEffectEditor";
 import { useFormDirty } from "../hooks/useFormDirty";
+import { useErrorHandler } from "../hooks/useErrorHandler";
+import { ErrorModal } from "./ErrorModal";
 
 interface SpellFormProps {
   onSave: (spell: Omit<Spell, "id">) => Promise<void>;
@@ -72,6 +74,9 @@ export function SpellForm({
     sourcePage: initialData?.sourcePage || "",
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  // Error handling
+  const { errorInfo, showErrorModal, handleApiError, clearError } = useErrorHandler();
 
   // Dirty state tracking
   const initialFormData = {
@@ -173,6 +178,7 @@ export function SpellForm({
       markClean(formData); // Mark form as clean after successful save
     } catch (error) {
       console.error("Failed to save spell:", error);
+      handleApiError(error as any, `Failed to ${mode} spell`);
     }
   };
 
@@ -234,6 +240,7 @@ export function SpellForm({
   };
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Name field (required) */}
       <div>
@@ -521,5 +528,16 @@ export function SpellForm({
         </button>
       </div>
     </form>
+
+    {/* Error Modal */}
+    {errorInfo && (
+      <ErrorModal
+        isOpen={showErrorModal}
+        onClose={clearError}
+        error={errorInfo}
+        title={`Error ${mode === 'create' ? 'Creating' : 'Updating'} Spell`}
+      />
+    )}
+  </>
   );
 }
