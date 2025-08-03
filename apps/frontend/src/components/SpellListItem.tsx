@@ -22,7 +22,8 @@ export function SpellListItem({
   const handleSpellDragStart = (e: React.DragEvent, spell: Spell) => {
     e.dataTransfer.setData("application/json", JSON.stringify(spell));
     e.dataTransfer.setData("text/plain", "spell"); // Type identifier
-    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.effectAllowed = "copy"; // Changed from "move" to "copy" to match dropEffect
+    console.log("Starting drag for spell:", spell.name, "with effect: copy");
   };
 
   return (

@@ -150,7 +150,10 @@ export function MainContent({
     e.stopPropagation();
     setIsDragOver(false);
 
-    if (!selectedCharacter || !onAddSpellToCharacter) return;
+    if (!selectedCharacter || !onAddSpellToCharacter) {
+      console.log("Drop cancelled: no selected character or handler function");
+      return;
+    }
 
     try {
       const spellData = JSON.parse(e.dataTransfer.getData("application/json"));
@@ -161,6 +164,7 @@ export function MainContent({
         selectedCharacter.name,
       );
       await onAddSpellToCharacter(spellData.id);
+      console.log("Successfully added spell to character");
     } catch (error) {
       console.error("Failed to add spell to character:", error);
     }
