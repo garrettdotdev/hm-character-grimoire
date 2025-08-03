@@ -16,6 +16,7 @@ interface CharacterActions {
   createCharacter: (data: Omit<Character, 'id' | 'knownSpellIds'>) => Promise<Character>;
   updateCharacter: (id: string, data: Omit<Character, 'id' | 'knownSpellIds'>) => Promise<Character>;
   deleteCharacter: (id: string) => Promise<void>;
+  importCharacters: (characters: any[]) => Promise<void>;
   addSpellToCharacter: (characterId: string, spellId: string) => Promise<void>;
   removeSpellFromCharacter: (characterId: string, spellId: string) => Promise<void>;
   clearError: () => void;
@@ -103,6 +104,22 @@ export const useCharacterStore = create<CharacterStore>((set) => ({
       set({ 
         error: error instanceof Error ? error.message : 'Failed to delete character',
         loading: false 
+      });
+      throw error;
+    }
+  },
+
+  importCharacters: async (characters) => {
+    set({ loading: true, error: null });
+    try {
+      await api.importCharacters({ characters });
+      // Refresh the character list after import
+      const updatedCharacters = await api.getCharacters();
+      set({ characters: updatedCharacters, loading: false });
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to import characters',
+        loading: false
       });
       throw error;
     }

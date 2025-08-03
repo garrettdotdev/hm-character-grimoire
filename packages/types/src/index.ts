@@ -80,12 +80,17 @@ export interface CreateCharacterRequest {
   convocations: SpellConvocation[];
   rank: CharacterRank;
   game?: string;
+  knownSpells?: string[]; // Spell names for import
 }
 
 export interface UpdateCharacterRequest extends Partial<CreateCharacterRequest> {}
 
 export interface SpellImportRequest {
   spells: CreateSpellRequest[];
+}
+
+export interface CharacterImportRequest {
+  characters: CreateCharacterRequest[];
 }
 
 export interface CreateFolderRequest {
@@ -131,8 +136,16 @@ export interface FoldersResponse {
 }
 
 export interface ImportError {
-  spell: any;
+  item: any; // Can be spell or character
   error: string;
+}
+
+export interface SpellImportError extends ImportError {
+  spell: any;
+}
+
+export interface CharacterImportError extends ImportError {
+  character: any;
 }
 
 export interface ImportResponse {
@@ -141,6 +154,34 @@ export interface ImportResponse {
   totalAttempted: number;
   errorCount?: number;
   errors?: ImportError[];
+}
+
+export interface CharacterSpellInfo {
+  name: string;
+  id: string;
+  convocation: SpellConvocation;
+}
+
+export interface CharacterImportPreview {
+  character: {
+    name: string;
+    finalName: string;
+    convocations: SpellConvocation[];
+    rank: CharacterRank;
+    game: string;
+  };
+  spells: {
+    found: CharacterSpellInfo[];
+    notFound: string[];
+    incompatible: Array<{ name: string; convocation: SpellConvocation; reason: string }>;
+  };
+  warnings: string[];
+}
+
+export interface CharacterImportResponse extends ImportResponse {
+  previews?: CharacterImportPreview[];
+  charactersImported?: number;
+  spellsAssigned?: number;
 }
 
 // Utility types

@@ -38,6 +38,13 @@ export function createCharacterRoutes(characterController: CharacterController):
     characterController.deleteCharacter
   );
 
+  // POST /api/characters/import
+  router.post(
+    '/import',
+    validateBody(schemas.CharacterImport),
+    characterController.importCharacters
+  );
+
   // GET /api/characters/:id/spells
   router.get(
     '/:id/spells',

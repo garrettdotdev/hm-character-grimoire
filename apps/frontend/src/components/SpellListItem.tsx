@@ -47,8 +47,8 @@ export function SpellListItem({
       onClick={() => onSpellSelect(spell)}
       onDoubleClick={handleDoubleClick}
     >
-      <div className="font-medium pr-8">{spell.name}</div>
-      <div className="text-sm text-gray-400">
+      <div className="font-medium pr-8 truncate">{spell.name}</div>
+      <div className="text-sm text-gray-400 truncate">
         {spell.convocation} • Level {spell.complexityLevel}
       </div>
       <div className="text-xs text-gray-500 mt-1 line-clamp-2">

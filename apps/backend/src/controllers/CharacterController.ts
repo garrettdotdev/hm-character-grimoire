@@ -5,6 +5,7 @@ import { asyncHandler } from '../middleware/errorHandler.js';
 import {
   CreateCharacterRequest,
   UpdateCharacterRequest,
+  CharacterImportRequest,
 } from '@repo/types';
 
 export class CharacterController {
@@ -57,5 +58,30 @@ export class CharacterController {
   ) => {
     await this.characterService.removeSpellFromCharacter(req.params.id, req.params.spellId);
     res.status(204).send();
+  });
+
+  importCharacters = asyncHandler(async (req: ValidatedRequest<CharacterImportRequest>, res: Response) => {
+    const result = await this.characterService.importCharacters(req.body.characters);
+
+    const response: any = {
+      message: result.message,
+      importedCount: result.importedCount,
+      totalAttempted: result.totalAttempted,
+      charactersImported: result.charactersImported,
+      spellsAssigned: result.spellsAssigned,
+    };
+
+    if (result.errors && result.errors.length > 0) {
+      response.errors = result.errors;
+      response.errorCount = result.errors.length;
+
+      if (result.importedCount === 0) {
+        return res.status(400).json(response);
+      } else {
+        return res.status(207).json(response); // 207 Multi-Status for partial success
+      }
+    }
+
+    res.status(201).json(response);
   });
 }

@@ -10,7 +10,9 @@ import { DeleteCharacterDialog } from "../components/DeleteCharacterDialog.js";
 import { SpellForm } from "../components/SpellForm.js";
 import { DeleteSpellDialog } from "../components/DeleteSpellDialog.js";
 import { SpellDetailsModal } from "../components/SpellDetailsModal.js";
+import { CharacterDetailsModal } from "../components/CharacterDetailsModal.js";
 import { SpellImportModal } from "../components/SpellImportModal.js";
+import { CharacterImportModal } from "../components/CharacterImportModal.js";
 import { AddFolderModal, type AddFolderModalRef } from "../components/AddFolderModal.js";
 import { ErrorTestModal } from "../components/ErrorTestModal.js";
 import { useCharacters } from "../hooks/useCharacters.js";
@@ -30,7 +32,9 @@ export function GrimoirePage() {
   const [showEditSpellModal, setShowEditSpellModal] = useState(false);
   const [showDeleteSpellModal, setShowDeleteSpellModal] = useState(false);
   const [showSpellDetailsModal, setShowSpellDetailsModal] = useState(false);
+  const [showCharacterDetailsModal, setShowCharacterDetailsModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showCharacterImportModal, setShowCharacterImportModal] = useState(false);
   const [showAddFolderModal, setShowAddFolderModal] = useState(false);
   const [showErrorTestModal, setShowErrorTestModal] = useState(false);
 
@@ -45,6 +49,7 @@ export function GrimoirePage() {
   const [editSpellDirty, setEditSpellDirty] = useState(false);
   const [addFolderDirty, setAddFolderDirty] = useState(false);
   const [importSpellsDirty, setImportSpellsDirty] = useState(false);
+  const [importCharactersDirty, setImportCharactersDirty] = useState(false);
 
   // Refresh trigger for character spells
   const [grimoireRefreshTrigger, setGrimoireRefreshTrigger] = useState(0);
@@ -183,6 +188,22 @@ export function GrimoirePage() {
     }
   };
 
+  const handleViewCharacterDetails = () => {
+    if (selectedCharacter) {
+      setShowCharacterDetailsModal(true);
+    }
+  };
+
+  const handleImportCharacters = async (characters: any[]) => {
+    try {
+      await characterActions.importCharacters(characters);
+      setShowCharacterImportModal(false);
+    } catch (error) {
+      console.error("Failed to import characters:", error);
+      throw error;
+    }
+  };
+
   const editCharacterInitialData = selectedCharacter ? {
     name: selectedCharacter.name,
     convocations: selectedCharacter.convocations,
@@ -216,6 +237,8 @@ export function GrimoirePage() {
         onAddCharacter={() => setShowAddModal(true)}
         onEditCharacter={() => setShowEditModal(true)}
         onDeleteCharacter={() => setShowDeleteModal(true)}
+        onViewCharacterDetails={handleViewCharacterDetails}
+        onImportCharacters={() => setShowCharacterImportModal(true)}
         loading={charactersLoading}
       />
       <MainContent
@@ -354,6 +377,14 @@ export function GrimoirePage() {
         />
       )}
 
+      {showCharacterDetailsModal && selectedCharacter && (
+        <CharacterDetailsModal
+          character={selectedCharacter}
+          onClose={() => setShowCharacterDetailsModal(false)}
+          isOpen={showCharacterDetailsModal}
+        />
+      )}
+
       {showImportModal && (
         <ProtectedModal
           isOpen={showImportModal}
@@ -370,6 +401,26 @@ export function GrimoirePage() {
             onImport={handleImportSpells}
             onCancel={() => setShowImportModal(false)}
             onDirtyChange={setImportSpellsDirty}
+          />
+        </ProtectedModal>
+      )}
+
+      {showCharacterImportModal && (
+        <ProtectedModal
+          isOpen={showCharacterImportModal}
+          onClose={() => setShowCharacterImportModal(false)}
+          title="Import Characters"
+          isDirty={importCharactersDirty}
+          onSave={async () => {
+            // For import modal, we don't have a separate save action
+            // The import action itself is the save
+          }}
+          canSave={false} // Import modal doesn't have a separate save action
+        >
+          <CharacterImportModal
+            onImport={handleImportCharacters}
+            onCancel={() => setShowCharacterImportModal(false)}
+            onDirtyChange={setImportCharactersDirty}
           />
         </ProtectedModal>
       )}

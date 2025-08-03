@@ -85,6 +85,10 @@ class ApiWrapper {
     return this.handleRequest(() => this.client.deleteCharacter(id));
   }
 
+  async importCharacters(data: any) {
+    return this.handleRequest(() => this.client.importCharacters(data));
+  }
+
   async getCharacterSpells(id: string) {
     return this.handleRequest(() => this.client.getCharacterSpells(id));
   }

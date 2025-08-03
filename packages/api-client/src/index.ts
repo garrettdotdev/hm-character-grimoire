@@ -6,6 +6,7 @@ import type {
   CreateCharacterRequest,
   UpdateCharacterRequest,
   SpellImportRequest,
+  CharacterImportRequest,
   CreateFolderRequest,
   MoveFolderRequest,
   RenameFolderRequest,
@@ -13,6 +14,7 @@ import type {
   CharactersResponse,
   FoldersResponse,
   ImportResponse,
+  CharacterImportResponse,
   ApiResponse, FolderWithPath, FolderContents,
 } from '@repo/types';
 
@@ -162,6 +164,13 @@ export class ApiClient {
   async deleteCharacter(id: string): Promise<void> {
     await this.request<void>(`/characters/${id}`, {
       method: 'DELETE',
+    });
+  }
+
+  async importCharacters(data: CharacterImportRequest): Promise<CharacterImportResponse> {
+    return this.request<CharacterImportResponse>('/characters/import', {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   }
 

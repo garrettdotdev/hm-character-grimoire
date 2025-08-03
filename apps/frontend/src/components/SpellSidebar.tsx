@@ -265,7 +265,7 @@ export function SpellSidebar({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden w-80">
         {loading ? (
           <div className="flex items-center justify-center p-8 text-gray-400 italic">
             Loading spells...

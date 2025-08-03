@@ -201,7 +201,7 @@ export function FolderTreeNode({
               autoFocus
             />
           ) : (
-            <span className="text-white text-sm font-medium flex-1">
+            <span className="text-white text-sm font-medium flex-1 truncate">
               {node.name}
             </span>
           )}

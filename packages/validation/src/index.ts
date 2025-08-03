@@ -38,6 +38,7 @@ export const CreateCharacterSchema = z.object({
   convocations: z.array(SpellConvocationSchema).min(1),
   rank: CharacterRankSchema,
   game: z.string().optional().default(''),
+  knownSpells: z.array(z.string()).optional().default([]),
 });
 
 export const UpdateCharacterSchema = CreateCharacterSchema.partial();
@@ -92,6 +93,10 @@ export const DeleteFolderBodySchema = z.object({
 // Import schemas
 export const SpellImportSchema = z.object({
   spells: z.array(CreateSpellSchema),
+});
+
+export const CharacterImportSchema = z.object({
+  characters: z.array(CreateCharacterSchema),
 });
 
 export const MoveSpellSchema = z.object({
@@ -175,6 +180,7 @@ export const schemas = {
   
   // Import schemas
   SpellImport: SpellImportSchema,
+  CharacterImport: CharacterImportSchema,
   MoveSpell: MoveSpellSchema,
   AddSpellToCharacter: AddSpellToCharacterSchema,
 

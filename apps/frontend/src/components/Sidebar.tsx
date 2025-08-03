@@ -8,6 +8,8 @@ interface SidebarProps {
   onAddCharacter: () => void;
   onEditCharacter: () => void;
   onDeleteCharacter: () => void;
+  onViewCharacterDetails: () => void;
+  onImportCharacters: () => void;
   loading: boolean;
 }
 
@@ -18,8 +20,14 @@ export function Sidebar({
   onAddCharacter,
   onEditCharacter,
   onDeleteCharacter,
+  onViewCharacterDetails,
+  onImportCharacters,
   loading,
 }: SidebarProps) {
+  const handleCharacterDoubleClick = (character: Character) => {
+    onCharacterSelect(character); // Ensure the character is selected
+    onViewCharacterDetails(); // Open the details modal
+  };
   return (
     <div className="min-w-80 w-fit flex-shrink-0 bg-gray-800 border-r border-gray-700 flex flex-col">
       <div className="p-4 border-b border-gray-700 flex justify-between items-center h-[76px]">
@@ -30,6 +38,18 @@ export function Sidebar({
             title="Add Character"
           >
             +
+          </button>
+          <button
+            onClick={onViewCharacterDetails}
+            disabled={!selectedCharacter}
+            className="bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 text-white px-3 py-2 rounded text-sm transition-colors"
+            title={
+              selectedCharacter
+                ? "View Character Details"
+                : "Select a character to view details"
+            }
+          >
+            👁️
           </button>
           <button
             onClick={onEditCharacter}
@@ -55,10 +75,17 @@ export function Sidebar({
           >
             🗑️
           </button>
+          <button
+            onClick={onImportCharacters}
+            className="bg-blue-700 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm transition-colors"
+            title="Import Characters from JSON"
+          >
+            📥
+          </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden w-80">
         {loading ? (
           <div className="flex items-center justify-center p-8 text-gray-400 italic">
             Loading characters...
@@ -80,9 +107,10 @@ export function Sidebar({
                     : ""
                 }`}
                 onClick={() => onCharacterSelect(character)}
+                onDoubleClick={() => handleCharacterDoubleClick(character)}
               >
-                <div className="font-medium">{character.name}</div>
-                <div className="text-sm text-gray-400">
+                <div className="font-medium truncate">{character.name}</div>
+                <div className="text-sm text-gray-400 truncate">
                   {character.rank} • {character.convocations.join(", ")}
                 </div>
                 {character.game && (
