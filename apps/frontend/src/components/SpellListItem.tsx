@@ -4,6 +4,7 @@ interface SpellListItemProps {
   spell: Spell;
   selectedSpell: Spell | null;
   onSpellSelect: (spell: Spell) => void;
+  onViewSpellDetails: () => void;
   onAddSpellToCharacter?: (spell: Spell) => void;
   hasSelectedCharacter: boolean;
   onMoveSpell?: (spellId: string, newFolderId: number) => void;
@@ -14,6 +15,7 @@ export function SpellListItem({
   spell,
   selectedSpell,
   onSpellSelect,
+  onViewSpellDetails,
   onAddSpellToCharacter,
   hasSelectedCharacter,
   onMoveSpell: _onMoveSpell, // Prefix with underscore to indicate intentionally unused
@@ -22,8 +24,13 @@ export function SpellListItem({
   const handleSpellDragStart = (e: React.DragEvent, spell: Spell) => {
     e.dataTransfer.setData("application/json", JSON.stringify(spell));
     e.dataTransfer.setData("text/plain", "spell"); // Type identifier
-    e.dataTransfer.effectAllowed = "copy"; // Changed from "move" to "copy" to match dropEffect
-    console.log("Starting drag for spell:", spell.name, "with effect: copy");
+    e.dataTransfer.effectAllowed = "copyMove"; // Allow both copy (for characters) and move (for folders)
+    console.log("Starting drag for spell:", spell.name, "with effect: copyMove");
+  };
+
+  const handleDoubleClick = () => {
+    onSpellSelect(spell); // Ensure the spell is selected
+    onViewSpellDetails(); // Open the details modal
   };
 
   return (
@@ -38,6 +45,7 @@ export function SpellListItem({
       draggable={true} // Always draggable for both folder moves and character assignment
       onDragStart={(e) => handleSpellDragStart(e, spell)}
       onClick={() => onSpellSelect(spell)}
+      onDoubleClick={handleDoubleClick}
     >
       <div className="font-medium pr-8">{spell.name}</div>
       <div className="text-sm text-gray-400">

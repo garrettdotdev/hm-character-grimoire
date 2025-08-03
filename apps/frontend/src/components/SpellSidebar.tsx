@@ -6,6 +6,7 @@ import { buildFolderTree, type FolderTreeState } from "../utils/folderTree";
 import { AddContextMenu } from "./AddContextMenu";
 import { DeleteFolderDialog } from "./DeleteFolderDialog";
 import { useFolderStore } from "../stores/folderStore";
+import { useSpellStore } from "../stores/spellStore";
 
 interface SpellSidebarProps {
   spells: Spell[];
@@ -17,6 +18,7 @@ interface SpellSidebarProps {
   onAddFolder: () => void;
   onEditSpell: () => void;
   onDeleteSpell: () => void;
+  onViewSpellDetails: () => void;
   onImportSpells: () => void;
   onAddSpellToCharacter?: (spell: Spell) => void;
   hasSelectedCharacter: boolean;
@@ -34,13 +36,15 @@ export function SpellSidebar({
   onAddFolder,
   onEditSpell,
   onDeleteSpell,
+  onViewSpellDetails,
   onImportSpells,
   onAddSpellToCharacter,
   hasSelectedCharacter,
   loading,
-  onUpdateSpell,
+  onUpdateSpell: _onUpdateSpell, // Prefix with underscore to indicate intentionally unused
 }: SpellSidebarProps) {
-  const { deleteFolder, renameFolder } = useFolderStore();
+  const { deleteFolder, renameFolder, moveFolder } = useFolderStore();
+  const { moveSpell } = useSpellStore();
   const [expandedFolders, setExpandedFolders] = useState<FolderTreeState>({
     1: true, // Root folder (ID=1) is always expanded
   });
@@ -108,28 +112,29 @@ export function SpellSidebar({
   };
 
   const handleMoveSpell = async (spellId: string, newFolderId: number) => {
-    const spell = spells.find((s) => s.id === spellId);
-    if (!spell || !onUpdateSpell) return;
+    try {
+      console.log("Moving spell:", spellId, "to folder:", newFolderId);
 
-    const updatedSpell = { ...spell, folderId: newFolderId };
-    onUpdateSpell(updatedSpell);
+      // Use the spell store to move the spell (this auto-updates the spell list)
+      await moveSpell(spellId, newFolderId);
+
+      console.log("Successfully moved spell");
+      // Refresh the spell list to pick up any changes
+      onSpellsChange();
+    } catch (error) {
+      console.error("Failed to move spell:", error);
+    }
   };
 
   const handleMoveFolder = async (folderId: number, newParentId: number | null) => {
     try {
-      const response = await fetch("/api/folders/move", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ folderId, newParentId }),
-      });
+      console.log("Moving folder:", folderId, "to parent:", newParentId);
 
-      if (!response.ok) {
-        throw new Error("Failed to move folder");
-      }
+      // Use the folder store instead of direct fetch (this auto-refreshes folders)
+      await moveFolder(folderId, newParentId);
 
-      // Refresh the spell list to pick up the moved folder
+      console.log("Successfully moved folder");
+      // Refresh the spell list to pick up any changes
       onSpellsChange();
     } catch (error) {
       console.error("Failed to move folder:", error);
@@ -208,9 +213,9 @@ export function SpellSidebar({
 
 
   return (
-    <div className="w-80 flex-shrink-0 bg-gray-800 border-l border-gray-700 flex flex-col">
+    <div className="min-w-80 w-fit flex-shrink-0 bg-gray-800 border-l border-gray-700 flex flex-col">
       <div className="p-4 border-b border-gray-700 flex justify-between items-center h-[76px]">
-        <div className="flex gap-2 relative">
+        <div className="flex gap-2 relative whitespace-nowrap">
           <button
             ref={addButtonRef}
             onClick={() => setShowContextMenu(!showContextMenu)}
@@ -226,6 +231,14 @@ export function SpellSidebar({
             onAddFolder={onAddFolder}
             buttonRef={addButtonRef}
           />
+          <button
+            onClick={onViewSpellDetails}
+            disabled={!selectedSpell}
+            className="bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 text-white px-3 py-2 rounded text-sm transition-colors"
+            title={selectedSpell ? "View Spell Details" : "Select a spell to view details"}
+          >
+            👁️
+          </button>
           <button
             onClick={onEditSpell}
             disabled={!selectedSpell}
@@ -270,6 +283,7 @@ export function SpellSidebar({
                 spell={spell}
                 selectedSpell={selectedSpell}
                 onSpellSelect={onSpellSelect}
+                onViewSpellDetails={onViewSpellDetails}
                 onAddSpellToCharacter={onAddSpellToCharacter}
                 hasSelectedCharacter={hasSelectedCharacter}
                 onMoveSpell={handleMoveSpell}
@@ -283,6 +297,7 @@ export function SpellSidebar({
             node={folderTree}
             selectedSpell={selectedSpell}
             onSpellSelect={onSpellSelect}
+            onViewSpellDetails={onViewSpellDetails}
             onToggleFolder={handleToggleFolder}
             onAddSpellToCharacter={onAddSpellToCharacter}
             hasSelectedCharacter={hasSelectedCharacter}

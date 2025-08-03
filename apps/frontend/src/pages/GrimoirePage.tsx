@@ -9,6 +9,7 @@ import { CharacterForm } from "../components/AddCharacterForm.js";
 import { DeleteCharacterDialog } from "../components/DeleteCharacterDialog.js";
 import { SpellForm } from "../components/SpellForm.js";
 import { DeleteSpellDialog } from "../components/DeleteSpellDialog.js";
+import { SpellDetailsModal } from "../components/SpellDetailsModal.js";
 import { SpellImportModal } from "../components/SpellImportModal.js";
 import { AddFolderModal, type AddFolderModalRef } from "../components/AddFolderModal.js";
 import { ErrorTestModal } from "../components/ErrorTestModal.js";
@@ -28,6 +29,7 @@ export function GrimoirePage() {
   const [showAddSpellModal, setShowAddSpellModal] = useState(false);
   const [showEditSpellModal, setShowEditSpellModal] = useState(false);
   const [showDeleteSpellModal, setShowDeleteSpellModal] = useState(false);
+  const [showSpellDetailsModal, setShowSpellDetailsModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showAddFolderModal, setShowAddFolderModal] = useState(false);
   const [showErrorTestModal, setShowErrorTestModal] = useState(false);
@@ -175,6 +177,12 @@ export function GrimoirePage() {
     }
   };
 
+  const handleViewSpellDetails = () => {
+    if (selectedSpell) {
+      setShowSpellDetailsModal(true);
+    }
+  };
+
   const editCharacterInitialData = selectedCharacter ? {
     name: selectedCharacter.name,
     convocations: selectedCharacter.convocations,
@@ -226,6 +234,7 @@ export function GrimoirePage() {
         onAddFolder={() => setShowAddFolderModal(true)}
         onEditSpell={() => setShowEditSpellModal(true)}
         onDeleteSpell={() => setShowDeleteSpellModal(true)}
+        onViewSpellDetails={handleViewSpellDetails}
         onImportSpells={() => setShowImportModal(true)}
         onAddSpellToCharacter={handleAddSpellToCharacter}
         hasSelectedCharacter={!!selectedCharacter}
@@ -335,6 +344,14 @@ export function GrimoirePage() {
             onCancel={() => setShowDeleteSpellModal(false)}
           />
         </Modal>
+      )}
+
+      {showSpellDetailsModal && selectedSpell && (
+        <SpellDetailsModal
+          spell={selectedSpell}
+          onClose={() => setShowSpellDetailsModal(false)}
+          isOpen={showSpellDetailsModal}
+        />
       )}
 
       {showImportModal && (

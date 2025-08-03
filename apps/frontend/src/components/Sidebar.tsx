@@ -21,9 +21,9 @@ export function Sidebar({
   loading,
 }: SidebarProps) {
   return (
-    <div className="w-80 flex-shrink-0 bg-gray-800 border-r border-gray-700 flex flex-col">
+    <div className="min-w-80 w-fit flex-shrink-0 bg-gray-800 border-r border-gray-700 flex flex-col">
       <div className="p-4 border-b border-gray-700 flex justify-between items-center h-[76px]">
-        <div className="flex gap-2">
+        <div className="flex gap-2 whitespace-nowrap">
           <button
             onClick={onAddCharacter}
             className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm transition-colors"

@@ -128,6 +128,13 @@ export class ApiClient {
     });
   }
 
+  async moveSpell(spellId: string, folderId: number): Promise<Spell> {
+    return this.request<Spell>(`/spells/${spellId}/move`, {
+      method: 'PATCH',
+      body: JSON.stringify({ folderId }),
+    });
+  }
+
   // Character methods
   async getCharacters(): Promise<Character[]> {
     const response = await this.request<CharactersResponse>('/characters');

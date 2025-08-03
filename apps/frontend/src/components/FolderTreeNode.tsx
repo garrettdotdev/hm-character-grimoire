@@ -7,6 +7,7 @@ interface FolderTreeNodeProps {
   node: FolderNode;
   selectedSpell: Spell | null;
   onSpellSelect: (spell: Spell) => void;
+  onViewSpellDetails: () => void;
   onToggleFolder: (folderId: number) => void;
   onAddSpellToCharacter?: (spell: Spell) => void;
   hasSelectedCharacter: boolean;
@@ -22,6 +23,7 @@ export function FolderTreeNode({
   node,
   selectedSpell,
   onSpellSelect,
+  onViewSpellDetails,
   onToggleFolder,
   onAddSpellToCharacter,
   hasSelectedCharacter,
@@ -59,6 +61,7 @@ export function FolderTreeNode({
     e.dataTransfer.setData("application/json", JSON.stringify(folderData));
     e.dataTransfer.setData("text/plain", "folder"); // Type identifier
     e.dataTransfer.effectAllowed = "move";
+    console.log("Starting drag for folder:", node.name, "with ID:", node.id);
   };
 
   const handleFolderDragEnd = () => {
@@ -67,6 +70,7 @@ export function FolderTreeNode({
 
   const handleFolderDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+    // Use "move" for both spells and folders when dropping on folders
     e.dataTransfer.dropEffect = "move";
     setIsDragOver(true);
   };
@@ -85,13 +89,19 @@ export function FolderTreeNode({
       const dragType = e.dataTransfer.getData("text/plain");
       const dragData = JSON.parse(e.dataTransfer.getData("application/json"));
 
+      console.log("Drop event - dragType:", dragType, "dragData:", dragData, "target folder:", node.name, "ID:", node.id);
+
       if (dragType === "spell" && dragData.id && onMoveSpell) {
         // Moving a spell to this folder
+        console.log("Moving spell", dragData.name, "to folder", node.name);
         onMoveSpell(dragData.id, node.id);
       } else if (dragType === "folder" && dragData.id && onMoveFolder) {
         // Moving a folder to this folder
         if (dragData.id !== node.id) {
+          console.log("Moving folder", dragData.name, "to folder", node.name);
           onMoveFolder(dragData.id, node.id);
+        } else {
+          console.log("Cannot move folder into itself");
         }
       }
     } catch (error) {
@@ -284,6 +294,7 @@ export function FolderTreeNode({
               node={child}
               selectedSpell={selectedSpell}
               onSpellSelect={onSpellSelect}
+              onViewSpellDetails={onViewSpellDetails}
               onToggleFolder={onToggleFolder}
               onAddSpellToCharacter={onAddSpellToCharacter}
               hasSelectedCharacter={hasSelectedCharacter}
@@ -303,6 +314,7 @@ export function FolderTreeNode({
               spell={spell}
               selectedSpell={selectedSpell}
               onSpellSelect={onSpellSelect}
+              onViewSpellDetails={onViewSpellDetails}
               onAddSpellToCharacter={onAddSpellToCharacter}
               hasSelectedCharacter={hasSelectedCharacter}
               onMoveSpell={onMoveSpell}

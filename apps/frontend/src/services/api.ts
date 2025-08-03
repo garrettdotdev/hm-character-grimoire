@@ -61,6 +61,10 @@ class ApiWrapper {
     return this.handleRequest(() => this.client.getSpellsByFolder(folderId));
   }
 
+  async moveSpell(spellId: string, folderId: number) {
+    return this.handleRequest(() => this.client.moveSpell(spellId, folderId));
+  }
+
   async getCharacters() {
     return this.handleRequest(() => this.client.getCharacters());
   }

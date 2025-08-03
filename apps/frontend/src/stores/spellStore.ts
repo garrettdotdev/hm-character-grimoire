@@ -17,6 +17,7 @@ interface SpellActions {
   createSpell: (data: CreateSpellRequest) => Promise<Spell>;
   updateSpell: (id: string, data: UpdateSpellRequest) => Promise<Spell>;
   deleteSpell: (id: string) => Promise<void>;
+  moveSpell: (spellId: string, folderId: number) => Promise<Spell>;
   importSpells: (spells: CreateSpellRequest[]) => Promise<void>;
   getCharacterSpells: (characterId: string) => Promise<Spell[]>;
   clearError: () => void;
@@ -104,9 +105,30 @@ export const useSpellStore = create<SpellStore>((set, get) => ({
         loading: false
       }));
     } catch (error) {
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'Failed to delete spell',
-        loading: false 
+        loading: false
+      });
+      throw error;
+    }
+  },
+
+  moveSpell: async (spellId, folderId) => {
+    set({ loading: true, error: null });
+    try {
+      const movedSpell = await api.moveSpell(spellId, folderId);
+      set(state => ({
+        spells: state.spells.map(spell =>
+          spell.id === spellId ? movedSpell : spell
+        ),
+        selectedSpell: state.selectedSpell?.id === spellId ? movedSpell : state.selectedSpell,
+        loading: false
+      }));
+      return movedSpell;
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to move spell',
+        loading: false
       });
       throw error;
     }
