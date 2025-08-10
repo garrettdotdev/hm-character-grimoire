@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { type Character, type Spell, SpellConvocation } from "@repo/types";
 import { SpellCard } from "./SpellCard";
 import { SpellDetailsModal } from "./SpellDetailsModal.tsx";
+import { FilterDropdown } from "./FilterDropdown.js";
 import { api } from "../services/api.js";
 
 interface MainContentProps {
@@ -26,8 +27,22 @@ export function MainContent({
   const [loading, setLoading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [selectedSpell, setSelectedSpell] = useState<Spell | null>(null);
+  const [useCompactFilters, setUseCompactFilters] = useState(false);
 
+  const filterContainerRef = useRef<HTMLDivElement>(null);
   const convocations = Object.values(SpellConvocation);
+
+  // Minimum width calculation for desktop filters
+  // Container padding: p-4 = 32px total (16px each side)
+  // Search input: min-w-48 = 192px minimum
+  // Gap after search: gap-4 = 16px
+  // Select elements: ~170px each (including padding, text, and dropdown arrow)
+  //   - "All Convocations" ≈ 140px + 24px padding = 164px
+  //   - "All Complexity" ≈ 120px + 24px padding = 144px
+  //   - "Sort by Complexity" ≈ 150px + 24px padding = 174px
+  // Gaps between selects: gap-2 = 8px each (2 gaps = 16px)
+  // Adding safety margin: 50px
+  const MINIMUM_DESKTOP_WIDTH = 32 + 192 + 16 + 164 + 8 + 144 + 8 + 174 + 50; // ~788px
 
   useEffect(() => {
     if (selectedCharacter) {
@@ -41,6 +56,24 @@ export function MainContent({
   useEffect(() => {
     filterSpells();
   }, [spells, searchTerm, selectedConvocation, selectedComplexity, sortBy]);
+
+  // Check container width and determine filter layout
+  useEffect(() => {
+    const checkFilterLayout = () => {
+      if (filterContainerRef.current) {
+        const containerWidth = filterContainerRef.current.offsetWidth;
+        setUseCompactFilters(containerWidth < MINIMUM_DESKTOP_WIDTH);
+      }
+    };
+
+    // Check on mount and window resize
+    checkFilterLayout();
+    window.addEventListener('resize', checkFilterLayout);
+
+    return () => {
+      window.removeEventListener('resize', checkFilterLayout);
+    };
+  }, [MINIMUM_DESKTOP_WIDTH]);
 
   const fetchCharacterSpells = async (characterId: string) => {
     setLoading(true);
@@ -182,7 +215,10 @@ export function MainContent({
 
   return (
     <div className="flex-1 min-w-0 flex flex-col">
-      <div className="p-4 border-b border-gray-700 flex gap-4 items-center flex-wrap h-[76px]">
+      <div
+        ref={filterContainerRef}
+        className="p-4 border-b border-gray-700 flex gap-4 items-center h-[76px] overflow-hidden"
+      >
         <div className="flex-1 min-w-48">
           <input
             type="text"
@@ -193,42 +229,59 @@ export function MainContent({
           />
         </div>
 
-        <div className="flex gap-2">
-          <select
-            value={selectedConvocation}
-            onChange={(e) => setSelectedConvocation(e.target.value)}
-            className="px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
-          >
-            <option value="all">All Convocations</option>
-            {convocations.map((conv) => (
-              <option key={conv} value={conv}>
-                {conv}
-              </option>
-            ))}
-          </select>
+        {/* Desktop filters - show when there's enough space */}
+        {!useCompactFilters && (
+          <div className="flex gap-2 flex-shrink-0">
+            <select
+              value={selectedConvocation}
+              onChange={(e) => setSelectedConvocation(e.target.value)}
+              className="px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
+            >
+              <option value="all">All Convocations</option>
+              {convocations.map((conv) => (
+                <option key={conv} value={conv}>
+                  {conv}
+                </option>
+              ))}
+            </select>
 
-          <select
-            value={selectedComplexity}
-            onChange={(e) => setSelectedComplexity(e.target.value)}
-            className="px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
-          >
-            <option value="all">All Complexity</option>
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => (
-              <option key={level} value={level.toString()}>
-                Level {level}
-              </option>
-            ))}
-          </select>
+            <select
+              value={selectedComplexity}
+              onChange={(e) => setSelectedComplexity(e.target.value)}
+              className="px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
+            >
+              <option value="all">All Complexity</option>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => (
+                <option key={level} value={level.toString()}>
+                  Level {level}
+                </option>
+              ))}
+            </select>
 
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as "name" | "complexity")}
-            className="px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
-          >
-            <option value="name">Sort by Name</option>
-            <option value="complexity">Sort by Complexity</option>
-          </select>
-        </div>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as "name" | "complexity")}
+              className="px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
+            >
+              <option value="name">Sort by Name</option>
+              <option value="complexity">Sort by Complexity</option>
+            </select>
+          </div>
+        )}
+
+        {/* Compact filter dropdown - show when space is limited */}
+        {useCompactFilters && (
+          <div className="flex-shrink-0">
+            <FilterDropdown
+              selectedConvocation={selectedConvocation}
+              selectedComplexity={selectedComplexity}
+              sortBy={sortBy}
+              onConvocationChange={setSelectedConvocation}
+              onComplexityChange={setSelectedComplexity}
+              onSortChange={setSortBy}
+            />
+          </div>
+        )}
       </div>
 
       <div
